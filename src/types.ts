@@ -11,7 +11,7 @@ import type {
   ImageCrop,
   LocalPoint,
   Radians
-} from '@excalidraw/excalidraw'
+} from '@excalidraw/excalidraw/types/element/types'
 
 export interface ExcalidrawElementBase {
   id: string;
@@ -136,9 +136,9 @@ export const EXCALIDRAW_ELEMENT_TYPES: Record<string, ExcalidrawElementType> = {
 } as const;
 
 // Server-side element with metadata
-export interface ServerElement extends Omit<ExcalidrawElementBase, 'id' | 'type'> {
+export interface ServerElement extends Omit<ExcalidrawElementBase, 'id'> {
   id: string;
-  type: string;
+  type: ExcalidrawElementType;
   createdAt?: string;
   updatedAt?: string;
   version?: number;
