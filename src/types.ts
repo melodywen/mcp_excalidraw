@@ -1,3 +1,18 @@
+import type {
+  ExcalidrawElement,
+  FillStyle,
+  StrokeStyle,
+  RoundnessType,
+  FileId,
+  Arrowhead,
+  TextAlign,
+  VerticalAlign,
+  PointBinding,
+  ImageCrop,
+  LocalPoint,
+  Radians
+} from '@excalidraw/excalidraw'
+
 export interface ExcalidrawElementBase {
   id: string;
   type: ExcalidrawElementType;
@@ -121,21 +136,64 @@ export const EXCALIDRAW_ELEMENT_TYPES: Record<string, ExcalidrawElementType> = {
 } as const;
 
 // Server-side element with metadata
-export interface ServerElement extends Omit<ExcalidrawElementBase, 'id'> {
+export interface ServerElement extends Omit<ExcalidrawElementBase, 'id' | 'type'> {
   id: string;
-  type: ExcalidrawElementType;
+  type: string;
   createdAt?: string;
   updatedAt?: string;
   version?: number;
   syncedAt?: string;
   source?: string;
   syncTimestamp?: string;
-  text?: string;
-  fontSize?: number;
-  fontFamily?: string | number;
   label?: {
     text: string;
   };
+  boundElements?: any[] | null;
+  containerId?: string | null;
+  locked?: boolean;
+
+  // ExcalidrawElement 共有或大部分元素共有的属性
+  fillStyle?: FillStyle; // 所有形状元素: 填充样式
+  strokeStyle?: StrokeStyle; // 所有形状元素: 边框样式
+  roundness?: null | { type: RoundnessType; value?: number; }; // 所有形状元素: 圆角
+  angle?: Radians; // 所有元素: 旋转角度
+  link?: string | null; // 所有元素: 链接
+  customData?: Record<string, any>; // 所有元素: 自定义数据
+
+  // ExcalidrawTextElement 专有属性
+  text?: string; // 文本元素: 文本内容
+  fontSize?: number; // 文本元素: 字号
+  fontFamily?: string | number; // 文本元素: 字体
+  textAlign?: TextAlign; // 文本元素: 水平对齐方式
+  verticalAlign?: VerticalAlign; // 文本元素: 垂直对齐方式
+  originalText?: string; // 文本元素: 原始文本
+  autoResize?: boolean; // 文本元素: 是否自动调整大小
+  lineHeight?: number; // 文本元素: 行高 (简化类型，移除品牌)
+
+  // ExcalidrawImageElement 专有属性
+  fileId?: FileId | null; // 图片元素: 图片文件 ID
+  status?: "pending" | "saved" | "error"; // 图片元素: 图片状态
+  scale?: [number, number]; // 图片元素: 图片缩放
+  crop?: ImageCrop | null; // 图片元素: 图片裁剪信息
+
+  // ExcalidrawLinearElement (线/箭头) & ExcalidrawFreeDrawElement (自由绘制) 共用属性
+  points?: readonly LocalPoint[]; // 线性/自由绘制元素: 构成路径的坐标点数组
+  lastCommittedPoint?: LocalPoint | null; // 线性/自由绘制元素: 最后提交的点
+
+  // ExcalidrawLinearElement (箭头) 专有属性
+  startBinding?: PointBinding | null; // 线性元素: 起点绑定
+  endBinding?: PointBinding | null; // 线性元素: 终点绑定
+  startArrowhead?: Arrowhead | null; // 线性元素: 起点箭头样式
+  endArrowhead?: Arrowhead | null; // 线性元素: 终点箭头样式
+  elbowed?: boolean; // 箭头元素: 是否为带拐角的箭头 (直角连接)
+
+  // ExcalidrawFreeDrawElement (自由绘制) 专有属性
+  pressures?: readonly number[]; // 自由绘制元素: 每个点的压力值
+  simulatePressure?: boolean; // 自由绘制元素: 是否模拟压力
+
+  // ExcalidrawFrameElement (框架) & ExcalidrawMagicFrameElement (魔法框架) 专有属性
+  children?: readonly ExcalidrawElement["id"][]; // 框架元素: 框架包含的子元素 ID
+  name?: string | null; // 框架元素: 框架名称
 }
 
 // API Response types
