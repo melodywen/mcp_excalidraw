@@ -177,24 +177,95 @@ const sceneState: SceneState = {
   groups: new Map()
 };
 
-// Schema definitions using zod
+// Schema definitions using zod - Excalidraw 元素的数据验证模式
 const ElementSchema = z.object({
-  type: z.enum(Object.values(EXCALIDRAW_ELEMENT_TYPES) as [ExcalidrawElementType, ...ExcalidrawElementType[]]),
-  x: z.number(),
-  y: z.number(),
-  width: z.number().optional(),
-  height: z.number().optional(),
-  points: z.array(z.object({ x: z.number(), y: z.number() })).optional(),
-  backgroundColor: z.string().optional(),
-  strokeColor: z.string().optional(),
-  strokeWidth: z.number().optional(),
-  roughness: z.number().optional(),
-  opacity: z.number().optional(),
-  text: z.string().optional(),
-  fontSize: z.number().optional(),
-  fontFamily: z.string().optional(),
-  groupIds: z.array(z.string()).optional(),
-  locked: z.boolean().optional()
+  // 基础属性 - Basic Properties (所有元素类型通用)
+  type: z.enum(Object.values(EXCALIDRAW_ELEMENT_TYPES) as [ExcalidrawElementType, ...ExcalidrawElementType[]]), // 元素类型：矩形、椭圆、菱形、箭头、文本、线条、自由绘制等
+  x: z.number(), // X坐标位置 (适用于所有元素类型)
+  y: z.number(), // Y坐标位置 (适用于所有元素类型)
+  width: z.number().optional(), // 元素宽度 (矩形、椭圆、菱形、框架元素)
+  height: z.number().optional(), // 元素高度 (矩形、椭圆、菱形、框架元素)
+  angle: z.number().optional(), // 旋转角度（弧度） (适用于所有元素类型)
+  
+  // 样式属性 - Style Properties (大部分元素通用)
+  strokeColor: z.string().optional(), // 边框颜色 (适用于所有形状元素类型)
+  backgroundColor: z.string().optional(), // 背景填充颜色 (适用于所有形状元素类型)
+  fillStyle: z.string().optional(), // 填充样式：实心、交叉线、斜线等 (适用于所有形状元素类型)
+  strokeWidth: z.number().optional(), // 边框线条粗细 (适用于所有形状元素类型)
+  strokeStyle: z.string().optional(), // 边框样式：实线、虚线、点线 (适用于所有形状元素类型)
+  roughness: z.number().optional(), // 手绘粗糙度（0-2，0为完全光滑） (适用于所有形状元素类型)
+  opacity: z.number().optional(), // 透明度（0-1） (适用于所有元素类型)
+  
+  // 组织结构属性 - Organization Properties (所有元素通用)
+  groupIds: z.array(z.string()).optional(), // 所属组的ID列表（元素可以属于多个组） (适用于所有元素类型)
+  frameId: z.string().nullable().optional(), // 所属框架的ID (适用于所有元素类型)
+  roundness: z.object({ // 圆角设置 (矩形、椭圆、菱形、框架元素)
+    type: z.number(), // 圆角类型
+    value: z.number().optional() // 圆角值
+  }).nullable().optional(),
+  
+  // 元数据属性 - Metadata Properties (所有元素通用)
+  seed: z.number().optional(), // 随机种子，用于生成一致的手绘效果 (适用于所有元素类型)
+  versionNonce: z.number().optional(), // 版本随机数，用于协作时的冲突解决 (适用于所有元素类型)
+  isDeleted: z.boolean().optional(), // 是否已删除（软删除标记） (适用于所有元素类型)
+  locked: z.boolean().optional(), // 是否锁定（锁定后不可编辑） (适用于所有元素类型)
+  link: z.string().nullable().optional(), // 关联的超链接URL (适用于所有元素类型)
+  customData: z.record(z.any()).nullable().optional(), // 自定义数据存储 (适用于所有元素类型)
+  boundElements: z.array(z.any()).nullable().optional(), // 绑定到此元素的其他元素列表 (适用于所有元素类型)
+  updated: z.number().optional(), // 最后更新时间戳 (适用于所有元素类型)
+  containerId: z.string().nullable().optional(), // 容器元素ID（如文本绑定到的形状） (适用于所有元素类型)
+  
+  // 文本元素专用属性 - Text Element Properties (仅限于 type 等于 text)
+  text: z.string().optional(), // 文本内容 (仅限于 type 等于 text)
+  fontSize: z.number().optional(), // 字体大小 (仅限于 type 等于 text)
+  fontFamily: z.union([z.string(), z.number()]).optional(), // 字体族（字符串名称或数字ID） (仅限于 type 等于 text)
+  textAlign: z.string().optional(), // 水平对齐方式：左对齐、居中、右对齐 (仅限于 type 等于 text)
+  verticalAlign: z.string().optional(), // 垂直对齐方式：顶部、中间、底部 (仅限于 type 等于 text)
+  originalText: z.string().optional(), // 原始文本（用于编辑历史） (仅限于 type 等于 text)
+  autoResize: z.boolean().optional(), // 是否自动调整文本框大小 (仅限于 type 等于 text)
+  lineHeight: z.number().optional(), // 行高倍数 (仅限于 type 等于 text)
+  
+  // 图片元素专用属性 - Image Element Properties (仅限于 type 等于 image)
+  fileId: z.string().nullable().optional(), // 图片文件ID (仅限于 type 等于 image)
+  status: z.enum(["pending", "saved", "error"]).optional(), // 图片状态：待处理、已保存、错误 (仅限于 type 等于 image)
+  scale: z.tuple([z.number(), z.number()]).optional(), // 图片缩放比例 [X轴, Y轴] (仅限于 type 等于 image)
+  crop: z.object({ // 图片裁剪信息 (仅限于 type 等于 image)
+    x: z.number(), // 裁剪区域X坐标
+    y: z.number(), // 裁剪区域Y坐标
+    width: z.number(), // 裁剪区域宽度
+    height: z.number(), // 裁剪区域高度
+    naturalWidth: z.number(), // 原始图片宽度
+    naturalHeight: z.number() // 原始图片高度
+  }).nullable().optional(),
+  
+  // 线性/自由绘制元素共用属性 - Linear/Freedraw Element Properties (arrow、line、freedraw 类型)
+  points: z.array(z.tuple([z.number(), z.number()])).optional(), // 构成路径的坐标点数组 [[x1,y1], [x2,y2], ...] (仅限于 type 等于 arrow、line、freedraw)
+  lastCommittedPoint: z.tuple([z.number(), z.number()]).nullable().optional(), // 最后提交的点坐标 (仅限于 type 等于 arrow、line、freedraw)
+  
+  // 线性元素专用属性 - Linear Element Properties (仅限于 type 等于 arrow、line)
+  startBinding: z.object({ // 起点绑定信息 (仅限于 type 等于 arrow、line)
+    elementId: z.string(), // 绑定到的元素ID
+    focus: z.number(), // 焦点位置（0-1）
+    gap: z.number(), // 与绑定元素的间距
+    fixedPoint: z.tuple([z.number(), z.number()]).nullable().optional() // 固定点坐标
+  }).nullable().optional(),
+  endBinding: z.object({ // 终点绑定信息 (仅限于 type 等于 arrow、line)
+    elementId: z.string(), // 绑定到的元素ID
+    focus: z.number(), // 焦点位置（0-1）
+    gap: z.number(), // 与绑定元素的间距
+    fixedPoint: z.tuple([z.number(), z.number()]).nullable().optional() // 固定点坐标
+  }).nullable().optional(),
+  startArrowhead: z.string().nullable().optional(), // 起点箭头样式：箭头、圆点、菱形等 (仅限于 type 等于 arrow)
+  endArrowhead: z.string().nullable().optional(), // 终点箭头样式：箭头、圆点、菱形等 (仅限于 type 等于 arrow)
+  elbowed: z.boolean().optional(), // 是否为带拐角的箭头（直角连接） (仅限于 type 等于 arrow)
+  
+  // 自由绘制元素专用属性 - Freedraw Element Properties (仅限于 type 等于 freedraw)
+  pressures: z.array(z.number()).optional(), // 每个点的压力值数组（用于模拟画笔压感） (仅限于 type 等于 freedraw)
+  simulatePressure: z.boolean().optional(), // 是否模拟压力效果 (仅限于 type 等于 freedraw)
+  
+  // 框架元素专用属性 - Frame Element Properties (仅限于 type 等于 frame)
+  children: z.array(z.string()).optional(), // 框架包含的子元素ID列表 (仅限于 type 等于 frame)
+  name: z.string().nullable().optional() // 框架名称 (仅限于 type 等于 frame)
 });
 
 const ElementIdSchema = z.object({
@@ -232,71 +303,349 @@ const ResourceSchema = z.object({
 const tools: Tool[] = [
   {
     name: 'create_element',
-    description: 'Create a new Excalidraw element',
+    description: '创建新的 Excalidraw 元素 - Create a new Excalidraw element',
     inputSchema: {
       type: 'object',
       properties: {
         type: { 
           type: 'string', 
-          enum: Object.values(EXCALIDRAW_ELEMENT_TYPES) 
+          enum: Object.values(EXCALIDRAW_ELEMENT_TYPES),
+          description: '元素类型：rectangle(矩形), ellipse(椭圆), diamond(菱形), arrow(箭头), text(文本), line(线条), freedraw(自由绘制)'
         },
-        x: { type: 'number' },
-        y: { type: 'number' },
-        width: { type: 'number' },
-        height: { type: 'number' },
-        backgroundColor: { type: 'string' },
-        strokeColor: { type: 'string' },
-        strokeWidth: { type: 'number' },
-        roughness: { type: 'number' },
-        opacity: { type: 'number' },
-        text: { type: 'string' },
-        fontSize: { type: 'number' },
-        fontFamily: { type: 'string' }
+        x: { type: 'number', description: 'X坐标位置 (适用于所有元素类型)' },
+        y: { type: 'number', description: 'Y坐标位置 (适用于所有元素类型)' },
+        width: { type: 'number', description: '元素宽度 (仅限于 type 等于 rectangle、ellipse、diamond、frame)' },
+        height: { type: 'number', description: '元素高度 (仅限于 type 等于 rectangle、ellipse、diamond、frame)' },
+        angle: { type: 'number', description: '旋转角度（弧度） (适用于所有元素类型)' },
+        strokeColor: { type: 'string', description: '边框颜色（十六进制色值，如 #000000） (适用于所有形状元素类型)' },
+        backgroundColor: { type: 'string', description: '背景填充颜色（十六进制色值，如 #ffffff） (适用于所有形状元素类型)' },
+        fillStyle: { type: 'string', description: '填充样式：hachure(交叉线), cross-hatch(网格), solid(实心), zigzag(锯齿) (适用于所有形状元素类型)' },
+        strokeWidth: { type: 'number', description: '边框线条粗细（像素） (适用于所有形状元素类型)' },
+        strokeStyle: { type: 'string', description: '边框样式：solid(实线), dashed(虚线), dotted(点线) (适用于所有形状元素类型)' },
+        roughness: { type: 'number', description: '手绘粗糙度（0-2，0为完全光滑，2为最粗糙） (适用于所有形状元素类型)' },
+        opacity: { type: 'number', description: '透明度（0-1，0为完全透明，1为完全不透明） (适用于所有元素类型)' },
+        groupIds: { 
+          type: 'array',
+          items: { type: 'string' },
+          description: '所属组的ID列表（元素可以属于多个组） (适用于所有元素类型)'
+        },
+        frameId: { type: 'string', description: '所属框架的ID (适用于所有元素类型)' },
+        roundness: {
+          type: 'object',
+          properties: {
+            type: { type: 'number', description: '圆角类型' },
+            value: { type: 'number', description: '圆角值' }
+          },
+          description: '圆角设置 (仅限于 type 等于 rectangle、ellipse、diamond、frame)'
+        },
+        seed: { type: 'number', description: '随机种子，用于生成一致的手绘效果 (适用于所有元素类型)' },
+        versionNonce: { type: 'number', description: '版本随机数，用于协作时的冲突解决 (适用于所有元素类型)' },
+        isDeleted: { type: 'boolean', description: '是否已删除（软删除标记） (适用于所有元素类型)' },
+        locked: { type: 'boolean', description: '是否锁定（锁定后不可编辑） (适用于所有元素类型)' },
+        link: { type: 'string', description: '关联的超链接URL (适用于所有元素类型)' },
+        customData: { type: 'object', description: '自定义数据存储 (适用于所有元素类型)' },
+        boundElements: { type: 'array', description: '绑定到此元素的其他元素列表 (适用于所有元素类型)' },
+        updated: { type: 'number', description: '最后更新时间戳 (适用于所有元素类型)' },
+        containerId: { type: 'string', description: '容器元素ID（如文本绑定到的形状） (适用于所有元素类型)' },
+        
+        // 文本元素专用属性 - Text element properties (仅限于 type 等于 text)
+        text: { type: 'string', description: '文本内容 (仅限于 type 等于 text)' },
+        fontSize: { type: 'number', description: '字体大小（像素） (仅限于 type 等于 text)' },
+        fontFamily: { 
+          oneOf: [
+            { type: 'string' },
+            { type: 'number' }
+          ],
+          description: '字体族（字符串名称或数字ID） (仅限于 type 等于 text)'
+        },
+        textAlign: { type: 'string', description: '水平对齐方式：left(左对齐), center(居中), right(右对齐) (仅限于 type 等于 text)' },
+        verticalAlign: { type: 'string', description: '垂直对齐方式：top(顶部), middle(中间), bottom(底部) (仅限于 type 等于 text)' },
+        originalText: { type: 'string', description: '原始文本（用于编辑历史） (仅限于 type 等于 text)' },
+        autoResize: { type: 'boolean', description: '是否自动调整文本框大小 (仅限于 type 等于 text)' },
+        lineHeight: { type: 'number', description: '行高倍数 (仅限于 type 等于 text)' },
+        
+        // 图片元素专用属性 - Image element properties (仅限于 type 等于 image)
+        fileId: { type: 'string', description: '图片文件ID (仅限于 type 等于 image)' },
+        status: { 
+          type: 'string',
+          enum: ['pending', 'saved', 'error'],
+          description: '图片状态：pending(待处理), saved(已保存), error(错误) (仅限于 type 等于 image)'
+        },
+        scale: {
+          type: 'array',
+          items: { type: 'number' },
+          minItems: 2,
+          maxItems: 2,
+          description: '图片缩放比例 [X轴, Y轴] (仅限于 type 等于 image)'
+        },
+        crop: {
+          type: 'object',
+          properties: {
+            x: { type: 'number', description: '裁剪区域X坐标' },
+            y: { type: 'number', description: '裁剪区域Y坐标' },
+            width: { type: 'number', description: '裁剪区域宽度' },
+            height: { type: 'number', description: '裁剪区域高度' },
+            naturalWidth: { type: 'number', description: '原始图片宽度' },
+            naturalHeight: { type: 'number', description: '原始图片高度' }
+          },
+          description: '图片裁剪信息 (仅限于 type 等于 image)'
+        },
+        
+        // 线性/自由绘制元素共用属性 - Linear/Freedraw element properties (arrow、line、freedraw 类型)
+        points: {
+          type: 'array',
+          items: {
+            type: 'array',
+            items: { type: 'number' },
+            minItems: 2,
+            maxItems: 2
+          },
+          description: '构成路径的坐标点数组 [[x1,y1], [x2,y2], ...] (仅限于 type 等于 arrow、line、freedraw)'
+        },
+        lastCommittedPoint: {
+          type: 'array',
+          items: { type: 'number' },
+          minItems: 2,
+          maxItems: 2,
+          description: '最后提交的点坐标 [x, y] (仅限于 type 等于 arrow、line、freedraw)'
+        },
+        
+        // 线性元素专用属性 - Linear element properties (仅限于 type 等于 arrow、line)
+        startBinding: {
+          type: 'object',
+          properties: {
+            elementId: { type: 'string', description: '绑定到的元素ID' },
+            focus: { type: 'number', description: '焦点位置（0-1）' },
+            gap: { type: 'number', description: '与绑定元素的间距' },
+            fixedPoint: {
+              type: 'array',
+              items: { type: 'number' },
+              minItems: 2,
+              maxItems: 2,
+              description: '固定点坐标 [x, y]'
+            }
+          },
+          description: '起点绑定信息 (仅限于 type 等于 arrow、line)'
+        },
+        endBinding: {
+          type: 'object',
+          properties: {
+            elementId: { type: 'string', description: '绑定到的元素ID' },
+            focus: { type: 'number', description: '焦点位置（0-1）' },
+            gap: { type: 'number', description: '与绑定元素的间距' },
+            fixedPoint: {
+              type: 'array',
+              items: { type: 'number' },
+              minItems: 2,
+              maxItems: 2,
+              description: '固定点坐标 [x, y]'
+            }
+          },
+          description: '终点绑定信息 (仅限于 type 等于 arrow、line)'
+        },
+        startArrowhead: { type: 'string', description: '起点箭头样式：arrow(箭头), dot(圆点), bar(横线), triangle(三角形)等 (仅限于 type 等于 arrow)' },
+        endArrowhead: { type: 'string', description: '终点箭头样式：arrow(箭头), dot(圆点), bar(横线), triangle(三角形)等 (仅限于 type 等于 arrow)' },
+        elbowed: { type: 'boolean', description: '是否为带拐角的箭头（直角连接） (仅限于 type 等于 arrow)' },
+        
+        // 自由绘制元素专用属性 - Freedraw element properties (仅限于 type 等于 freedraw)
+        pressures: {
+          type: 'array',
+          items: { type: 'number' },
+          description: '每个点的压力值数组（用于模拟画笔压感） (仅限于 type 等于 freedraw)'
+        },
+        simulatePressure: { type: 'boolean', description: '是否模拟压力效果 (仅限于 type 等于 freedraw)' },
+        
+        // 框架元素专用属性 - Frame element properties (仅限于 type 等于 frame)
+        children: {
+          type: 'array',
+          items: { type: 'string' },
+          description: '框架包含的子元素ID列表 (仅限于 type 等于 frame)'
+        },
+        name: { type: 'string', description: '框架名称 (仅限于 type 等于 frame)' }
       },
       required: ['type', 'x', 'y']
     }
   },
   {
     name: 'update_element',
-    description: 'Update an existing Excalidraw element',
+    description: '更新现有的 Excalidraw 元素 - Update an existing Excalidraw element',
     inputSchema: {
       type: 'object',
       properties: {
-        id: { type: 'string' },
+        id: { type: 'string', description: '要更新的元素ID' },
         type: { 
           type: 'string', 
-          enum: Object.values(EXCALIDRAW_ELEMENT_TYPES) 
+          enum: Object.values(EXCALIDRAW_ELEMENT_TYPES),
+          description: '元素类型：rectangle(矩形), ellipse(椭圆), diamond(菱形), arrow(箭头), text(文本), line(线条), freedraw(自由绘制)'
         },
-        x: { type: 'number' },
-        y: { type: 'number' },
-        width: { type: 'number' },
-        height: { type: 'number' },
-        backgroundColor: { type: 'string' },
-        strokeColor: { type: 'string' },
-        strokeWidth: { type: 'number' },
-        roughness: { type: 'number' },
-        opacity: { type: 'number' },
-        text: { type: 'string' },
-        fontSize: { type: 'number' },
-        fontFamily: { type: 'string' }
+        x: { type: 'number', description: 'X坐标位置 (适用于所有元素类型)' },
+        y: { type: 'number', description: 'Y坐标位置 (适用于所有元素类型)' },
+        width: { type: 'number', description: '元素宽度 (仅限于 type 等于 rectangle、ellipse、diamond、frame)' },
+        height: { type: 'number', description: '元素高度 (仅限于 type 等于 rectangle、ellipse、diamond、frame)' },
+        angle: { type: 'number', description: '旋转角度（弧度） (适用于所有元素类型)' },
+        strokeColor: { type: 'string', description: '边框颜色（十六进制色值，如 #000000） (适用于所有形状元素类型)' },
+        backgroundColor: { type: 'string', description: '背景填充颜色（十六进制色值，如 #ffffff） (适用于所有形状元素类型)' },
+        fillStyle: { type: 'string', description: '填充样式：hachure(交叉线), cross-hatch(网格), solid(实心), zigzag(锯齿) (适用于所有形状元素类型)' },
+        strokeWidth: { type: 'number', description: '边框线条粗细（像素） (适用于所有形状元素类型)' },
+        strokeStyle: { type: 'string', description: '边框样式：solid(实线), dashed(虚线), dotted(点线) (适用于所有形状元素类型)' },
+        roughness: { type: 'number', description: '手绘粗糙度（0-2，0为完全光滑，2为最粗糙） (适用于所有形状元素类型)' },
+        opacity: { type: 'number', description: '透明度（0-1，0为完全透明，1为完全不透明） (适用于所有元素类型)' },
+        groupIds: { 
+          type: 'array',
+          items: { type: 'string' },
+          description: '所属组的ID列表（元素可以属于多个组） (适用于所有元素类型)'
+        },
+        frameId: { type: 'string', description: '所属框架的ID (适用于所有元素类型)' },
+        roundness: {
+          type: 'object',
+          properties: {
+            type: { type: 'number', description: '圆角类型' },
+            value: { type: 'number', description: '圆角值' }
+          },
+          description: '圆角设置 (仅限于 type 等于 rectangle、ellipse、diamond、frame)'
+        },
+        seed: { type: 'number', description: '随机种子，用于生成一致的手绘效果 (适用于所有元素类型)' },
+        versionNonce: { type: 'number', description: '版本随机数，用于协作时的冲突解决 (适用于所有元素类型)' },
+        isDeleted: { type: 'boolean', description: '是否已删除（软删除标记） (适用于所有元素类型)' },
+        locked: { type: 'boolean', description: '是否锁定（锁定后不可编辑） (适用于所有元素类型)' },
+        link: { type: 'string', description: '关联的超链接URL (适用于所有元素类型)' },
+        customData: { type: 'object', description: '自定义数据存储 (适用于所有元素类型)' },
+        boundElements: { type: 'array', description: '绑定到此元素的其他元素列表 (适用于所有元素类型)' },
+        updated: { type: 'number', description: '最后更新时间戳 (适用于所有元素类型)' },
+        containerId: { type: 'string', description: '容器元素ID（如文本绑定到的形状） (适用于所有元素类型)' },
+        
+        // 文本元素专用属性 - Text element properties (仅限于 type 等于 text)
+        text: { type: 'string', description: '文本内容 (仅限于 type 等于 text)' },
+        fontSize: { type: 'number', description: '字体大小（像素） (仅限于 type 等于 text)' },
+        fontFamily: { 
+          oneOf: [
+            { type: 'string' },
+            { type: 'number' }
+          ],
+          description: '字体族（字符串名称或数字ID） (仅限于 type 等于 text)'
+        },
+        textAlign: { type: 'string', description: '水平对齐方式：left(左对齐), center(居中), right(右对齐) (仅限于 type 等于 text)' },
+        verticalAlign: { type: 'string', description: '垂直对齐方式：top(顶部), middle(中间), bottom(底部) (仅限于 type 等于 text)' },
+        originalText: { type: 'string', description: '原始文本（用于编辑历史） (仅限于 type 等于 text)' },
+        autoResize: { type: 'boolean', description: '是否自动调整文本框大小 (仅限于 type 等于 text)' },
+        lineHeight: { type: 'number', description: '行高倍数 (仅限于 type 等于 text)' },
+        
+        // 图片元素专用属性 - Image element properties (仅限于 type 等于 image)
+        fileId: { type: 'string', description: '图片文件ID (仅限于 type 等于 image)' },
+        status: { 
+          type: 'string',
+          enum: ['pending', 'saved', 'error'],
+          description: '图片状态：pending(待处理), saved(已保存), error(错误) (仅限于 type 等于 image)'
+        },
+        scale: {
+          type: 'array',
+          items: { type: 'number' },
+          minItems: 2,
+          maxItems: 2,
+          description: '图片缩放比例 [X轴, Y轴] (仅限于 type 等于 image)'
+        },
+        crop: {
+          type: 'object',
+          properties: {
+            x: { type: 'number', description: '裁剪区域X坐标' },
+            y: { type: 'number', description: '裁剪区域Y坐标' },
+            width: { type: 'number', description: '裁剪区域宽度' },
+            height: { type: 'number', description: '裁剪区域高度' },
+            naturalWidth: { type: 'number', description: '原始图片宽度' },
+            naturalHeight: { type: 'number', description: '原始图片高度' }
+          },
+          description: '图片裁剪信息 (仅限于 type 等于 image)'
+        },
+        
+        // 线性/自由绘制元素共用属性 - Linear/Freedraw element properties (arrow、line、freedraw 类型)
+        points: {
+          type: 'array',
+          items: {
+            type: 'array',
+            items: { type: 'number' },
+            minItems: 2,
+            maxItems: 2
+          },
+          description: '构成路径的坐标点数组 [[x1,y1], [x2,y2], ...] (仅限于 type 等于 arrow、line、freedraw)'
+        },
+        lastCommittedPoint: {
+          type: 'array',
+          items: { type: 'number' },
+          minItems: 2,
+          maxItems: 2,
+          description: '最后提交的点坐标 [x, y] (仅限于 type 等于 arrow、line、freedraw)'
+        },
+        
+        // 线性元素专用属性 - Linear element properties (仅限于 type 等于 arrow、line)
+        startBinding: {
+          type: 'object',
+          properties: {
+            elementId: { type: 'string', description: '绑定到的元素ID' },
+            focus: { type: 'number', description: '焦点位置（0-1）' },
+            gap: { type: 'number', description: '与绑定元素的间距' },
+            fixedPoint: {
+              type: 'array',
+              items: { type: 'number' },
+              minItems: 2,
+              maxItems: 2,
+              description: '固定点坐标 [x, y]'
+            }
+          },
+          description: '起点绑定信息 (仅限于 type 等于 arrow、line)'
+        },
+        endBinding: {
+          type: 'object',
+          properties: {
+            elementId: { type: 'string', description: '绑定到的元素ID' },
+            focus: { type: 'number', description: '焦点位置（0-1）' },
+            gap: { type: 'number', description: '与绑定元素的间距' },
+            fixedPoint: {
+              type: 'array',
+              items: { type: 'number' },
+              minItems: 2,
+              maxItems: 2,
+              description: '固定点坐标 [x, y]'
+            }
+          },
+          description: '终点绑定信息 (仅限于 type 等于 arrow、line)'
+        },
+        startArrowhead: { type: 'string', description: '起点箭头样式：arrow(箭头), dot(圆点), bar(横线), triangle(三角形)等 (仅限于 type 等于 arrow)' },
+        endArrowhead: { type: 'string', description: '终点箭头样式：arrow(箭头), dot(圆点), bar(横线), triangle(三角形)等 (仅限于 type 等于 arrow)' },
+        elbowed: { type: 'boolean', description: '是否为带拐角的箭头（直角连接） (仅限于 type 等于 arrow)' },
+        
+        // 自由绘制元素专用属性 - Freedraw element properties (仅限于 type 等于 freedraw)
+        pressures: {
+          type: 'array',
+          items: { type: 'number' },
+          description: '每个点的压力值数组（用于模拟画笔压感） (仅限于 type 等于 freedraw)'
+        },
+        simulatePressure: { type: 'boolean', description: '是否模拟压力效果 (仅限于 type 等于 freedraw)' },
+        
+        // 框架元素专用属性 - Frame element properties (仅限于 type 等于 frame)
+        children: {
+          type: 'array',
+          items: { type: 'string' },
+          description: '框架包含的子元素ID列表 (仅限于 type 等于 frame)'
+        },
+        name: { type: 'string', description: '框架名称 (仅限于 type 等于 frame)' }
       },
       required: ['id']
     }
   },
   {
     name: 'delete_element',
-    description: 'Delete an Excalidraw element',
+    description: '删除 Excalidraw 元素 - Delete an Excalidraw element',
     inputSchema: {
       type: 'object',
       properties: {
-        id: { type: 'string' }
+        id: { type: 'string', description: '要删除的元素ID' }
       },
       required: ['id']
     }
   },
   {
     name: 'query_elements',
-    description: 'Query Excalidraw elements with optional filters',
+    description: '查询 Excalidraw 元素（支持过滤条件）- Query Excalidraw elements with optional filters',
     inputSchema: {
       type: 'object',
       properties: {
@@ -313,7 +662,7 @@ const tools: Tool[] = [
   },
   {
     name: 'get_resource',
-    description: 'Get an Excalidraw resource',
+    description: '获取 Excalidraw 资源 - Get an Excalidraw resource',
     inputSchema: {
       type: 'object',
       properties: {
@@ -327,7 +676,7 @@ const tools: Tool[] = [
   },
   {
     name: 'group_elements',
-    description: 'Group multiple elements together',
+    description: '将多个元素组合在一起 - Group multiple elements together',
     inputSchema: {
       type: 'object',
       properties: {
@@ -341,7 +690,7 @@ const tools: Tool[] = [
   },
   {
     name: 'ungroup_elements',
-    description: 'Ungroup a group of elements',
+    description: '取消元素组合 - Ungroup a group of elements',
     inputSchema: {
       type: 'object',
       properties: {
@@ -352,7 +701,7 @@ const tools: Tool[] = [
   },
   {
     name: 'align_elements',
-    description: 'Align elements to a specific position',
+    description: '对齐元素到指定位置 - Align elements to a specific position',
     inputSchema: {
       type: 'object',
       properties: {
@@ -370,7 +719,7 @@ const tools: Tool[] = [
   },
   {
     name: 'distribute_elements',
-    description: 'Distribute elements evenly',
+    description: '均匀分布元素 - Distribute elements evenly',
     inputSchema: {
       type: 'object',
       properties: {
@@ -388,7 +737,7 @@ const tools: Tool[] = [
   },
   {
     name: 'lock_elements',
-    description: 'Lock elements to prevent modification',
+    description: '锁定元素防止修改 - Lock elements to prevent modification',
     inputSchema: {
       type: 'object',
       properties: {
@@ -402,7 +751,7 @@ const tools: Tool[] = [
   },
   {
     name: 'unlock_elements',
-    description: 'Unlock elements to allow modification',
+    description: '解锁元素允许修改 - Unlock elements to allow modification',
     inputSchema: {
       type: 'object',
       properties: {
@@ -416,7 +765,7 @@ const tools: Tool[] = [
   },
   {
     name: 'create_from_mermaid',
-    description: 'Convert a Mermaid diagram to Excalidraw elements and render them on the canvas',
+    description: '将 Mermaid 图表转换为 Excalidraw 元素并在画布上渲染 - Convert a Mermaid diagram to Excalidraw elements and render them on the canvas',
     inputSchema: {
       type: 'object',
       properties: {
@@ -451,7 +800,7 @@ const tools: Tool[] = [
   },
   {
     name: 'batch_create_elements',
-    description: 'Create multiple Excalidraw elements at once - ideal for complex diagrams',
+    description: '批量创建多个 Excalidraw 元素 - 适用于复杂图表 - Create multiple Excalidraw elements at once - ideal for complex diagrams',
     inputSchema: {
       type: 'object',
       properties: {
@@ -462,20 +811,159 @@ const tools: Tool[] = [
             properties: {
               type: { 
                 type: 'string', 
-                enum: Object.values(EXCALIDRAW_ELEMENT_TYPES) 
+                enum: Object.values(EXCALIDRAW_ELEMENT_TYPES),
+                description: '元素类型：rectangle(矩形), ellipse(椭圆), diamond(菱形), arrow(箭头), text(文本), line(线条), freedraw(自由绘制)'
               },
-              x: { type: 'number' },
-              y: { type: 'number' },
-              width: { type: 'number' },
-              height: { type: 'number' },
-              backgroundColor: { type: 'string' },
-              strokeColor: { type: 'string' },
-              strokeWidth: { type: 'number' },
-              roughness: { type: 'number' },
-              opacity: { type: 'number' },
-              text: { type: 'string' },
-              fontSize: { type: 'number' },
-              fontFamily: { type: 'string' }
+              x: { type: 'number', description: 'X坐标位置 (适用于所有元素类型)' },
+              y: { type: 'number', description: 'Y坐标位置 (适用于所有元素类型)' },
+              width: { type: 'number', description: '元素宽度 (仅限于 type 等于 rectangle、ellipse、diamond、frame)' },
+              height: { type: 'number', description: '元素高度 (仅限于 type 等于 rectangle、ellipse、diamond、frame)' },
+              angle: { type: 'number', description: '旋转角度（弧度） (适用于所有元素类型)' },
+              strokeColor: { type: 'string', description: '边框颜色（十六进制色值，如 #000000） (适用于所有形状元素类型)' },
+              backgroundColor: { type: 'string', description: '背景填充颜色（十六进制色值，如 #ffffff） (适用于所有形状元素类型)' },
+              fillStyle: { type: 'string', description: '填充样式：hachure(交叉线), cross-hatch(网格), solid(实心), zigzag(锯齿) (适用于所有形状元素类型)' },
+              strokeWidth: { type: 'number', description: '边框线条粗细（像素） (适用于所有形状元素类型)' },
+              strokeStyle: { type: 'string', description: '边框样式：solid(实线), dashed(虚线), dotted(点线) (适用于所有形状元素类型)' },
+              roughness: { type: 'number', description: '手绘粗糙度（0-2，0为完全光滑，2为最粗糙） (适用于所有形状元素类型)' },
+              opacity: { type: 'number', description: '透明度（0-1，0为完全透明，1为完全不透明） (适用于所有元素类型)' },
+              groupIds: { 
+                type: 'array',
+                items: { type: 'string' },
+                description: '所属组的ID列表（元素可以属于多个组） (适用于所有元素类型)'
+              },
+              frameId: { type: 'string', description: '所属框架的ID (适用于所有元素类型)' },
+              roundness: {
+                type: 'object',
+                properties: {
+                  type: { type: 'number', description: '圆角类型' },
+                  value: { type: 'number', description: '圆角值' }
+                },
+                description: '圆角设置 (仅限于 type 等于 rectangle、ellipse、diamond、frame)'
+              },
+              seed: { type: 'number', description: '随机种子，用于生成一致的手绘效果 (适用于所有元素类型)' },
+              versionNonce: { type: 'number', description: '版本随机数，用于协作时的冲突解决 (适用于所有元素类型)' },
+              isDeleted: { type: 'boolean', description: '是否已删除（软删除标记） (适用于所有元素类型)' },
+              locked: { type: 'boolean', description: '是否锁定（锁定后不可编辑） (适用于所有元素类型)' },
+              link: { type: 'string', description: '关联的超链接URL (适用于所有元素类型)' },
+              customData: { type: 'object', description: '自定义数据存储 (适用于所有元素类型)' },
+              boundElements: { type: 'array', description: '绑定到此元素的其他元素列表 (适用于所有元素类型)' },
+              updated: { type: 'number', description: '最后更新时间戳 (适用于所有元素类型)' },
+              containerId: { type: 'string', description: '容器元素ID（如文本绑定到的形状） (适用于所有元素类型)' },
+              
+              // Text element properties (仅限于 type 等于 text)
+              text: { type: 'string', description: '文本内容 (仅限于 type 等于 text)' },
+              fontSize: { type: 'number', description: '字体大小（像素） (仅限于 type 等于 text)' },
+              fontFamily: { 
+                oneOf: [
+                  { type: 'string' },
+                  { type: 'number' }
+                ],
+                description: '字体族（字符串名称或数字ID） (仅限于 type 等于 text)'
+              },
+              textAlign: { type: 'string', description: '水平对齐方式：left(左对齐), center(居中), right(右对齐) (仅限于 type 等于 text)' },
+              verticalAlign: { type: 'string', description: '垂直对齐方式：top(顶部), middle(中间), bottom(底部) (仅限于 type 等于 text)' },
+              originalText: { type: 'string', description: '原始文本（用于编辑历史） (仅限于 type 等于 text)' },
+              autoResize: { type: 'boolean', description: '是否自动调整文本框大小 (仅限于 type 等于 text)' },
+              lineHeight: { type: 'number', description: '行高倍数 (仅限于 type 等于 text)' },
+              
+              // Image element properties (仅限于 type 等于 image)
+              fileId: { type: 'string', description: '图片文件ID (仅限于 type 等于 image)' },
+              status: { 
+                type: 'string',
+                enum: ['pending', 'saved', 'error'],
+                description: '图片状态：pending(待处理), saved(已保存), error(错误) (仅限于 type 等于 image)'
+              },
+              scale: {
+                type: 'array',
+                items: { type: 'number' },
+                minItems: 2,
+                maxItems: 2,
+                description: '图片缩放比例 [X轴, Y轴] (仅限于 type 等于 image)'
+              },
+              crop: {
+                type: 'object',
+                properties: {
+                  x: { type: 'number', description: '裁剪区域X坐标' },
+                  y: { type: 'number', description: '裁剪区域Y坐标' },
+                  width: { type: 'number', description: '裁剪区域宽度' },
+                  height: { type: 'number', description: '裁剪区域高度' },
+                  naturalWidth: { type: 'number', description: '原始图片宽度' },
+                  naturalHeight: { type: 'number', description: '原始图片高度' }
+                },
+                description: '图片裁剪信息 (仅限于 type 等于 image)'
+              },
+              
+              // Linear/Freedraw element properties (arrow、line、freedraw 类型)
+              points: {
+                type: 'array',
+                items: {
+                  type: 'array',
+                  items: { type: 'number' },
+                  minItems: 2,
+                  maxItems: 2
+                },
+                description: '构成路径的坐标点数组 [[x1,y1], [x2,y2], ...] (仅限于 type 等于 arrow、line、freedraw)'
+              },
+              lastCommittedPoint: {
+                type: 'array',
+                items: { type: 'number' },
+                minItems: 2,
+                maxItems: 2,
+                description: '最后提交的点坐标 [x, y] (仅限于 type 等于 arrow、line、freedraw)'
+              },
+              
+              // Linear element properties (仅限于 type 等于 arrow、line)
+              startBinding: {
+                type: 'object',
+                properties: {
+                  elementId: { type: 'string', description: '绑定到的元素ID' },
+                  focus: { type: 'number', description: '焦点位置（0-1）' },
+                  gap: { type: 'number', description: '与绑定元素的间距' },
+                  fixedPoint: {
+                    type: 'array',
+                    items: { type: 'number' },
+                    minItems: 2,
+                    maxItems: 2,
+                    description: '固定点坐标 [x, y]'
+                  }
+                },
+                description: '起点绑定信息 (仅限于 type 等于 arrow、line)'
+              },
+              endBinding: {
+                type: 'object',
+                properties: {
+                  elementId: { type: 'string', description: '绑定到的元素ID' },
+                  focus: { type: 'number', description: '焦点位置（0-1）' },
+                  gap: { type: 'number', description: '与绑定元素的间距' },
+                  fixedPoint: {
+                    type: 'array',
+                    items: { type: 'number' },
+                    minItems: 2,
+                    maxItems: 2,
+                    description: '固定点坐标 [x, y]'
+                  }
+                },
+                description: '终点绑定信息 (仅限于 type 等于 arrow、line)'
+              },
+              startArrowhead: { type: 'string', description: '起点箭头样式：arrow(箭头), dot(圆点), bar(横线), triangle(三角形)等 (仅限于 type 等于 arrow)' },
+              endArrowhead: { type: 'string', description: '终点箭头样式：arrow(箭头), dot(圆点), bar(横线), triangle(三角形)等 (仅限于 type 等于 arrow)' },
+              elbowed: { type: 'boolean', description: '是否为带拐角的箭头（直角连接） (仅限于 type 等于 arrow)' },
+              
+              // Freedraw element properties (仅限于 type 等于 freedraw)
+              pressures: {
+                type: 'array',
+                items: { type: 'number' },
+          description: '每个点的压力值数组（用于模拟画笔压感） (仅限于 type 等于 freedraw)'
+        },
+        simulatePressure: { type: 'boolean', description: '是否模拟压力效果 (仅限于 type 等于 freedraw)' },
+              
+              // Frame element properties (仅限于 type 等于 frame)
+              children: {
+                type: 'array',
+                items: { type: 'string' },
+                description: '框架包含的子元素ID列表 (仅限于 type 等于 frame)'
+              },
+              name: { type: 'string', description: '框架名称 (仅限于 type 等于 frame)' }
             },
             required: ['type', 'x', 'y']
           }
@@ -538,7 +1026,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           version: 1
-        };
+        } as ServerElement;
 
         // Convert text to label format for Excalidraw
         const excalidrawElement = convertTextToLabel(element);
@@ -575,7 +1063,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
           id,
           ...updates,
           updatedAt: new Date().toISOString()
-        };
+        } as Partial<ServerElement> & { id: string };
 
         // Convert text to label format for Excalidraw
         const excalidrawElement = convertTextToLabel(updatePayload as ServerElement);
@@ -926,7 +1414,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             version: 1
-          };
+          } as ServerElement;
           
           // Convert text to label format for Excalidraw
           const excalidrawElement = convertTextToLabel(element);
