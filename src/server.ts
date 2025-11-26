@@ -95,19 +95,92 @@ const CreateElementSchema = z.object({
   y: z.number(),
   width: z.number().optional(),
   height: z.number().optional(),
+  
+  // Basic styling properties
   backgroundColor: z.string().optional(),
   strokeColor: z.string().optional(),
   strokeWidth: z.number().optional(),
+  fillStyle: z.string().optional(),
+  strokeStyle: z.string().optional(),
   roughness: z.number().optional(),
   opacity: z.number().optional(),
+  angle: z.number().optional(),
+  
+  // Element metadata
+  seed: z.number().optional(),
+  versionNonce: z.number().optional(),
+  isDeleted: z.boolean().optional(),
+  locked: z.boolean().optional(),
+  frameId: z.string().nullable().optional(),
+  link: z.string().nullable().optional(),
+  customData: z.record(z.any()).nullable().optional(),
+  boundElements: z.array(z.object({
+    id: z.string(),
+    type: z.enum(['text', 'arrow'])
+  })).nullable().optional(),
+  updated: z.number().optional(),
+  containerId: z.string().nullable().optional(),
+  groupIds: z.array(z.string()).optional(),
+  
+  // Roundness property
+  roundness: z.object({
+    type: z.number(),
+    value: z.number().optional()
+  }).nullable().optional(),
+  
+  // Text element properties
   text: z.string().optional(),
+  fontSize: z.number().optional(),
+  fontFamily: z.union([z.string(), z.number()]).optional(),
+  textAlign: z.string().optional(),
+  verticalAlign: z.string().optional(),
+  baseline: z.number().optional(),
+  lineHeight: z.number().optional(),
+  originalText: z.string().optional(),
+  autoResize: z.boolean().optional(),
+  
+  // Image element properties
+  fileId: z.string().nullable().optional(),
+  status: z.enum(['pending', 'saved', 'error']).optional(),
+  scale: z.tuple([z.number(), z.number()]).optional(),
+  crop: z.object({
+    x: z.number(),
+    y: z.number(),
+    width: z.number(),
+    height: z.number()
+  }).nullable().optional(),
+  
+  // Linear element properties (for arrow and line types)
+  points: z.array(z.tuple([z.number(), z.number()])).optional(),
+  lastCommittedPoint: z.tuple([z.number(), z.number()]).nullable().optional(),
+  startArrowhead: z.string().nullable().optional(),
+  endArrowhead: z.string().nullable().optional(),
+  startBinding: z.object({
+    elementId: z.string(),
+    focus: z.number(),
+    gap: z.number(),
+    fixedPoint: z.tuple([z.number(), z.number()]).nullable().optional()
+  }).nullable().optional(),
+  endBinding: z.object({
+    elementId: z.string(),
+    focus: z.number(),
+    gap: z.number(),
+    fixedPoint: z.tuple([z.number(), z.number()]).nullable().optional()
+  }).nullable().optional(),
+  elbowed: z.boolean().optional(),
+  
+  // Freedraw element properties
+  pressures: z.array(z.number()).optional(),
+  simulatePressure: z.boolean().optional(),
+  
+  // Frame element properties
+  children: z.array(z.string()).optional(),
+  name: z.string().nullable().optional(),
+  
+  // Legacy label property
   label: z.object({
     text: z.string()
-  }).optional(),
-  fontSize: z.number().optional(),
-  fontFamily: z.string().optional(),
-  groupIds: z.array(z.string()).optional(),
-  locked: z.boolean().optional()
+  }).optional()
 });
 
 const UpdateElementSchema = z.object({
@@ -117,19 +190,92 @@ const UpdateElementSchema = z.object({
   y: z.number().optional(),
   width: z.number().optional(),
   height: z.number().optional(),
+  
+  // Basic styling properties
   backgroundColor: z.string().optional(),
   strokeColor: z.string().optional(),
   strokeWidth: z.number().optional(),
+  fillStyle: z.string().optional(),
+  strokeStyle: z.string().optional(),
   roughness: z.number().optional(),
   opacity: z.number().optional(),
+  angle: z.number().optional(),
+  
+  // Element metadata
+  seed: z.number().optional(),
+  versionNonce: z.number().optional(),
+  isDeleted: z.boolean().optional(),
+  locked: z.boolean().optional(),
+  frameId: z.string().nullable().optional(),
+  link: z.string().nullable().optional(),
+  customData: z.record(z.any()).nullable().optional(),
+  boundElements: z.array(z.object({
+    id: z.string(),
+    type: z.enum(['text', 'arrow'])
+  })).nullable().optional(),
+  updated: z.number().optional(),
+  containerId: z.string().nullable().optional(),
+  groupIds: z.array(z.string()).optional(),
+  
+  // Roundness property
+  roundness: z.object({
+    type: z.number(),
+    value: z.number().optional()
+  }).nullable().optional(),
+  
+  // Text element properties
   text: z.string().optional(),
+  fontSize: z.number().optional(),
+  fontFamily: z.union([z.string(), z.number()]).optional(),
+  textAlign: z.string().optional(),
+  verticalAlign: z.string().optional(),
+  baseline: z.number().optional(),
+  lineHeight: z.number().optional(),
+  originalText: z.string().optional(),
+  autoResize: z.boolean().optional(),
+  
+  // Image element properties
+  fileId: z.string().nullable().optional(),
+  status: z.enum(['pending', 'saved', 'error']).optional(),
+  scale: z.tuple([z.number(), z.number()]).optional(),
+  crop: z.object({
+    x: z.number(),
+    y: z.number(),
+    width: z.number(),
+    height: z.number()
+  }).nullable().optional(),
+  
+  // Linear element properties (for arrow and line types)
+  points: z.array(z.tuple([z.number(), z.number()])).optional(),
+  lastCommittedPoint: z.tuple([z.number(), z.number()]).nullable().optional(),
+  startArrowhead: z.string().nullable().optional(),
+  endArrowhead: z.string().nullable().optional(),
+  startBinding: z.object({
+    elementId: z.string(),
+    focus: z.number(),
+    gap: z.number(),
+    fixedPoint: z.tuple([z.number(), z.number()]).nullable().optional()
+  }).nullable().optional(),
+  endBinding: z.object({
+    elementId: z.string(),
+    focus: z.number(),
+    gap: z.number(),
+    fixedPoint: z.tuple([z.number(), z.number()]).nullable().optional()
+  }).nullable().optional(),
+  elbowed: z.boolean().optional(),
+  
+  // Freedraw element properties
+  pressures: z.array(z.number()).optional(),
+  simulatePressure: z.boolean().optional(),
+  
+  // Frame element properties
+  children: z.array(z.string()).optional(),
+  name: z.string().nullable().optional(),
+  
+  // Legacy label property
   label: z.object({
     text: z.string()
-  }).optional(),
-  fontSize: z.number().optional(),
-  fontFamily: z.string().optional(),
-  groupIds: z.array(z.string()).optional(),
-  locked: z.boolean().optional()
+  }).optional()
 });
 
 // API Routes
@@ -166,7 +312,7 @@ app.post('/api/elements', (req: Request, res: Response) => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       version: 1
-    };
+    } as ServerElement;
 
     elements.set(id, element);
     
@@ -216,7 +362,7 @@ app.put('/api/elements/:id', (req: Request, res: Response) => {
       ...updates,
       updatedAt: new Date().toISOString(),
       version: (existingElement.version || 0) + 1
-    };
+    } as ServerElement;
 
     elements.set(id, updatedElement);
     
@@ -372,7 +518,7 @@ app.post('/api/elements/batch', (req: Request, res: Response) => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         version: 1
-      };
+      } as ServerElement;
       
       elements.set(id, element);
       createdElements.push(element);
