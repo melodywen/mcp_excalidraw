@@ -30,7 +30,11 @@
     "noEmitOnError": false,
     "preserveConstEnums": true,
     "removeComments": false,
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@excalidraw/excalidraw/*": ["./node_modules/@excalidraw/excalidraw/dist/types/excalidraw/*", "./node_modules/@excalidraw/excalidraw/*"]
+    }
   },
   "include": [
     "src/**/*.ts"

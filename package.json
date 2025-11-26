@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@excalidraw/excalidraw": "^0.18.0",
+    "@excalidraw/math": "^0.18.0-f0063e113",
     "@excalidraw/mermaid-to-excalidraw": "^1.1.3",
     "@modelcontextprotocol/sdk": "latest",
     "cors": "^2.8.5",

@@ -1,5 +1,4 @@
 import type {
-  ExcalidrawElement,
   FillStyle,
   StrokeStyle,
   RoundnessType,
@@ -8,10 +7,13 @@ import type {
   TextAlign,
   VerticalAlign,
   PointBinding,
-  ImageCrop,
+  ImageCrop
+} from '../node_modules/@excalidraw/excalidraw/dist/types/excalidraw/element/types'
+
+import type {
   LocalPoint,
   Radians
-} from '@excalidraw/excalidraw/types/element/types'
+} from '@excalidraw/math'
 
 export interface ExcalidrawElementBase {
   id: string;
