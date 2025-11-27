@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {
-  Excalidraw,
-  convertToExcalidrawElements,
+  Excalidraw, 
   CaptureUpdateAction,
   ExcalidrawImperativeAPI
 } from '@excalidraw/excalidraw'
 import type { 
-  ExcalidrawElement, 
-  NonDeleted, 
-  NonDeletedExcalidrawElement,
+  ExcalidrawElement,
   FillStyle,
   StrokeStyle,
   RoundnessType,
@@ -134,6 +131,176 @@ const cleanElementForExcalidraw = (element: ServerElement): Partial<ExcalidrawEl
   return cleanElement;
 }
 
+// 生成唯一ID的辅助函数
+const generateId = (): string => {
+  return Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+};
+
+// 🔧 自定义 convertToExcalidrawElements 实现 - 使用底层包类型，根据 type 进行字段处理
+const customConvertToExcalidrawElements = (
+  elements: Partial<ExcalidrawElement>[], 
+  options: { regenerateIds?: boolean } = {}
+): Partial<ExcalidrawElement>[] => {
+  const { regenerateIds = false } = options;
+  
+  return elements.map(element => {
+    // 基础必需字段 - 所有元素都需要
+    const baseElement: Partial<ExcalidrawElement> = {
+      id: regenerateIds ? generateId() : (element.id || generateId()),
+      type: element.type as any,
+      x: element.x || 0,
+      y: element.y || 0,
+      versionNonce: element.versionNonce || Math.floor(Math.random() * 1000000),
+      updated: element.updated || Date.now(),
+      seed: element.seed || Math.floor(Math.random() * 1000000),
+      isDeleted: element.isDeleted || false,
+      angle: (element.angle as Radians) || (0 as Radians),
+      opacity: element.opacity || 100,
+      locked: element.locked || false,
+      link: element.link || null,
+      customData: element.customData || null,
+      boundElements: element.boundElements || null,
+      containerId: element.containerId || null,
+      // 🔧 添加缺失的必需字段
+      groupIds: (element.groupIds as readonly string[]) || [] as readonly string[],
+      frameId: element.frameId || null,
+      index: element.index || null,
+      version: element.version || 1,
+    };
+
+    // 根据元素类型添加特定字段和默认值
+    switch (element.type) {
+      case 'rectangle':
+      case 'ellipse':
+      case 'diamond':
+        return {
+          ...baseElement,
+          type: element.type,
+          width: element.width || 100,
+          height: element.height || 100,
+          strokeColor: element.strokeColor || '#1e1e1e',
+          backgroundColor: element.backgroundColor || 'transparent',
+          fillStyle: (element.fillStyle as FillStyle) || 'solid',
+          strokeWidth: element.strokeWidth || 1,
+          strokeStyle: (element.strokeStyle as StrokeStyle) || 'solid',
+          roughness: element.roughness || 1,
+          roundness: element.roundness || null,
+        } as ExcalidrawElement;
+
+      case 'arrow':
+      case 'line':
+        const linearElement = {
+          ...baseElement,
+          type: element.type,
+          points: (element.points as readonly LocalPoint[]) || ([[0, 0], [100, 0]] as unknown as readonly LocalPoint[]),
+          strokeColor: element.strokeColor || '#1e1e1e',
+          backgroundColor: element.backgroundColor || 'transparent',
+          fillStyle: (element.fillStyle as FillStyle) || 'solid',
+          strokeWidth: element.strokeWidth || 1,
+          strokeStyle: (element.strokeStyle as StrokeStyle) || 'solid',
+          roughness: element.roughness || 1,
+          roundness: element.roundness || null,
+          lastCommittedPoint: (element.lastCommittedPoint as LocalPoint) || null,
+          // 🔗 关键：保留绑定字段
+          startBinding: (element.startBinding as PointBinding) || null,
+          endBinding: (element.endBinding as PointBinding) || null,
+        };
+        
+        // 箭头特有字段
+        if (element.type === 'arrow') {
+          return {
+            ...linearElement,
+            startArrowhead: (element.startArrowhead as Arrowhead) || null,
+            endArrowhead: (element.endArrowhead as Arrowhead) || 'arrow',
+            elbowed: element.elbowed || false,
+          } as ExcalidrawElement;
+        }
+        
+        return linearElement as ExcalidrawElement;
+
+      case 'text':
+        return {
+          ...baseElement,
+          type: 'text',
+          text: element.text || '',
+          fontSize: element.fontSize || 20,
+          fontFamily: element.fontFamily || 1,
+          textAlign: (element.textAlign as TextAlign) || 'left',
+          verticalAlign: (element.verticalAlign as VerticalAlign) || 'top',
+          strokeColor: element.strokeColor || '#1e1e1e',
+          backgroundColor: element.backgroundColor || 'transparent',
+          fillStyle: (element.fillStyle as FillStyle) || 'solid',
+          strokeWidth: element.strokeWidth || 1,
+          strokeStyle: (element.strokeStyle as StrokeStyle) || 'solid',
+          roughness: element.roughness || 1,
+          originalText: element.originalText || element.text || '',
+          autoResize: element.autoResize !== undefined ? element.autoResize : true,
+          lineHeight: element.lineHeight || 1.25,
+        } as ExcalidrawElement;
+
+      case 'freedraw':
+        return {
+          ...baseElement,
+          type: 'freedraw',
+          points: (element.points as readonly LocalPoint[]) || ([[0, 0]] as unknown as readonly LocalPoint[]),
+          strokeColor: element.strokeColor || '#1e1e1e',
+          backgroundColor: element.backgroundColor || 'transparent',
+          fillStyle: (element.fillStyle as FillStyle) || 'solid',
+          strokeWidth: element.strokeWidth || 1,
+          strokeStyle: (element.strokeStyle as StrokeStyle) || 'solid',
+          roughness: element.roughness || 1,
+          pressures: (element.pressures as readonly number[]) || [] as readonly number[],
+          simulatePressure: element.simulatePressure !== undefined ? element.simulatePressure : true,
+          lastCommittedPoint: (element.lastCommittedPoint as LocalPoint) || null,
+        } as ExcalidrawElement;
+
+      case 'image':
+        return {
+          ...baseElement,
+          type: 'image',
+          width: element.width || 100,
+          height: element.height || 100,
+          fileId: (element.fileId as FileId) || null,
+          status: element.status || 'saved',
+          scale: element.scale || [1, 1],
+          crop: (element.crop as ImageCrop) || null,
+        } as ExcalidrawElement;
+
+      case 'frame':
+        return {
+          ...baseElement,
+          type: 'frame',
+          width: element.width || 200,
+          height: element.height || 200,
+          strokeColor: element.strokeColor || '#1e1e1e',
+          backgroundColor: element.backgroundColor || 'transparent',
+          fillStyle: (element.fillStyle as FillStyle) || 'solid',
+          strokeWidth: element.strokeWidth || 1,
+          strokeStyle: (element.strokeStyle as StrokeStyle) || 'solid',
+          roughness: element.roughness || 1,
+          roundness: element.roundness || null,
+          name: element.name || null,
+          children: (element.children as readonly ExcalidrawElement["id"][]) || [] as readonly ExcalidrawElement["id"][],
+        } as ExcalidrawElement;
+
+      default:
+        console.warn(`Unknown element type: ${element.type}, using default rectangle properties`);
+        return {
+          ...baseElement,
+          type: element.type as any,
+          width: element.width || 100,
+          height: element.height || 100,
+          strokeColor: element.strokeColor || '#1e1e1e',
+          backgroundColor: element.backgroundColor || 'transparent',
+          fillStyle: (element.fillStyle as FillStyle) || 'solid',
+          strokeWidth: element.strokeWidth || 1,
+          strokeStyle: (element.strokeStyle as StrokeStyle) || 'solid',
+          roughness: element.roughness || 1,
+        } as ExcalidrawElement;
+    }
+  });
+};
+
 // Helper function to validate and fix element binding data
 const validateAndFixBindings = (elements: Partial<ExcalidrawElement>[]): Partial<ExcalidrawElement>[] => {
   const elementMap = new Map(elements.map(el => [el.id!, el]));
@@ -220,7 +387,7 @@ function App(): JSX.Element {
       
       if (result.success && result.elements && result.elements.length > 0) {
         const cleanedElements = result.elements.map(cleanElementForExcalidraw)
-        const convertedElements = convertToExcalidrawElements(cleanedElements, { regenerateIds: false })
+        const convertedElements = customConvertToExcalidrawElements(cleanedElements, { regenerateIds: false })
         excalidrawAPI?.updateScene({ elements: convertedElements })
       }
     } catch (error) {
@@ -284,9 +451,9 @@ function App(): JSX.Element {
           if (data.elements && data.elements.length > 0) {
             const cleanedElements = data.elements.map(cleanElementForExcalidraw)
             const validatedElements = validateAndFixBindings(cleanedElements)
-            const convertedElements = convertToExcalidrawElements(validatedElements, { regenerateIds: false })
+            const convertedElements = customConvertToExcalidrawElements(validatedElements, { regenerateIds: false })
             excalidrawAPI.updateScene({
-              elements: convertedElements,
+              elements: convertedElements as ExcalidrawElement[],
               captureUpdate: CaptureUpdateAction.NEVER
             })
           }
@@ -295,10 +462,10 @@ function App(): JSX.Element {
         case 'element_created':
           if (data.element) {
             const cleanedNewElement = cleanElementForExcalidraw(data.element)
-            const newElement = convertToExcalidrawElements([cleanedNewElement], { regenerateIds: false })
+            const newElement = customConvertToExcalidrawElements([cleanedNewElement], { regenerateIds: false })
             const updatedElementsAfterCreate = [...currentElements, ...newElement]
             excalidrawAPI.updateScene({ 
-              elements: updatedElementsAfterCreate,
+              elements: updatedElementsAfterCreate as ExcalidrawElement[],
               captureUpdate: CaptureUpdateAction.NEVER
             })
           }
@@ -307,9 +474,9 @@ function App(): JSX.Element {
         case 'element_updated':
           if (data.element) {
             const cleanedUpdatedElement = cleanElementForExcalidraw(data.element)
-            const convertedUpdatedElement = convertToExcalidrawElements([cleanedUpdatedElement], { regenerateIds: false })[0]
+            const convertedUpdatedElement = customConvertToExcalidrawElements([cleanedUpdatedElement], { regenerateIds: false })[0]
             const updatedElements = currentElements.map(el =>
-              el.id === data.element!.id ? convertedUpdatedElement : el
+              el.id === data.element!.id ? convertedUpdatedElement as ExcalidrawElement : el
             )
             excalidrawAPI.updateScene({
               elements: updatedElements,
@@ -331,10 +498,10 @@ function App(): JSX.Element {
         case 'elements_batch_created':
           if (data.elements) {
             const cleanedBatchElements = data.elements.map(cleanElementForExcalidraw)
-            const batchElements = convertToExcalidrawElements(cleanedBatchElements, { regenerateIds: false })
+            const batchElements = customConvertToExcalidrawElements(cleanedBatchElements, { regenerateIds: false })
             const updatedElementsAfterBatch = [...currentElements, ...batchElements]
             excalidrawAPI.updateScene({ 
-              elements: updatedElementsAfterBatch,
+              elements: updatedElementsAfterBatch as ExcalidrawElement[],
               captureUpdate: CaptureUpdateAction.NEVER
             })
           }
@@ -361,9 +528,9 @@ function App(): JSX.Element {
               }
 
               if (result.elements && result.elements.length > 0) {
-                const convertedElements = convertToExcalidrawElements(result.elements, { regenerateIds: false })
+                const convertedElements = customConvertToExcalidrawElements(result.elements as Partial<ExcalidrawElement>[], { regenerateIds: false })
                 excalidrawAPI.updateScene({
-                  elements: convertedElements,
+                  elements: convertedElements as ExcalidrawElement[],
                   captureUpdate: CaptureUpdateAction.IMMEDIATELY
                 })
 
