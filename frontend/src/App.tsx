@@ -284,7 +284,7 @@ function App(): JSX.Element {
           if (data.elements && data.elements.length > 0) {
             const cleanedElements = data.elements.map(cleanElementForExcalidraw)
             const validatedElements = validateAndFixBindings(cleanedElements)
-            const convertedElements = convertToExcalidrawElements(validatedElements)
+            const convertedElements = convertToExcalidrawElements(validatedElements, { regenerateIds: false })
             excalidrawAPI.updateScene({
               elements: convertedElements,
               captureUpdate: CaptureUpdateAction.NEVER
@@ -295,7 +295,7 @@ function App(): JSX.Element {
         case 'element_created':
           if (data.element) {
             const cleanedNewElement = cleanElementForExcalidraw(data.element)
-            const newElement = convertToExcalidrawElements([cleanedNewElement])
+            const newElement = convertToExcalidrawElements([cleanedNewElement], { regenerateIds: false })
             const updatedElementsAfterCreate = [...currentElements, ...newElement]
             excalidrawAPI.updateScene({ 
               elements: updatedElementsAfterCreate,
@@ -307,7 +307,7 @@ function App(): JSX.Element {
         case 'element_updated':
           if (data.element) {
             const cleanedUpdatedElement = cleanElementForExcalidraw(data.element)
-            const convertedUpdatedElement = convertToExcalidrawElements([cleanedUpdatedElement])[0]
+            const convertedUpdatedElement = convertToExcalidrawElements([cleanedUpdatedElement], { regenerateIds: false })[0]
             const updatedElements = currentElements.map(el =>
               el.id === data.element!.id ? convertedUpdatedElement : el
             )
@@ -331,7 +331,7 @@ function App(): JSX.Element {
         case 'elements_batch_created':
           if (data.elements) {
             const cleanedBatchElements = data.elements.map(cleanElementForExcalidraw)
-            const batchElements = convertToExcalidrawElements(cleanedBatchElements)
+            const batchElements = convertToExcalidrawElements(cleanedBatchElements, { regenerateIds: false })
             const updatedElementsAfterBatch = [...currentElements, ...batchElements]
             excalidrawAPI.updateScene({ 
               elements: updatedElementsAfterBatch,
