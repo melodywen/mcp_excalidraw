@@ -180,6 +180,7 @@ const sceneState: SceneState = {
 // Schema definitions using zod - Excalidraw 元素的数据验证模式
 const ElementSchema = z.object({
   // 基础属性 - Basic Properties (所有元素类型通用)
+  id: z.string().optional(), // 元素ID，可选，如果不提供则自动生成
   type: z.enum(Object.values(EXCALIDRAW_ELEMENT_TYPES) as [ExcalidrawElementType, ...ExcalidrawElementType[]]), // 元素类型：矩形、椭圆、菱形、箭头、文本、线条、自由绘制等
   x: z.number(), // X坐标位置 (适用于所有元素类型)
   y: z.number(), // Y坐标位置 (适用于所有元素类型)
@@ -1405,9 +1406,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
 
         const createdElements: ServerElement[] = [];
         
-        // Create each element with unique ID
+        // Create each element with provided ID or generate unique ID
         for (const elementData of params.elements) {
-          const id = generateId();
+          const id = elementData.id || generateId();
           const element: ServerElement = {
             id,
             ...elementData,
