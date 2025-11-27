@@ -511,7 +511,7 @@ app.post('/api/elements/batch', (req: Request, res: Response) => {
     
     elementsToCreate.forEach(elementData => {
       const params = CreateElementSchema.parse(elementData);
-      const id = generateId();
+      const id = params.id || generateId();
       const element: ServerElement = {
         id,
         ...params,
