@@ -219,12 +219,47 @@ const customConvertToExcalidrawElements = (
         return linearElement as ExcalidrawElement;
 
       case 'text':
+        const textContent = element.text || '';
+        const fontSize = element.fontSize || 20;
+        const lineHeight = element.lineHeight || 1.25;
+        
+        // 🔧 智能宽高计算：如果用户没有传递宽高，则自动计算
+        let calculatedWidth = element.width;
+        let calculatedHeight = element.height;
+        
+        if (!element.width || !element.height) {
+          // 🔧 优化文字宽高计算算法
+          const lines = textContent.split('\n');
+          const maxLineLength = Math.max(...lines.map((line: string) => line.length), 1);
+          
+          // 🔧 更准确的字符宽度计算
+          // 中文字符宽度约等于字体大小，英文字符约为字体大小的0.6倍
+          const hasChineseChars = /[\u4e00-\u9fa5]/.test(textContent);
+          const avgCharWidth = hasChineseChars ? fontSize * 0.9 : fontSize * 0.65;
+          
+          // 🔧 添加合理的内边距
+          const paddingX = fontSize * 0.5; // 水平内边距
+          const paddingY = fontSize * 0.3; // 垂直内边距
+          
+          // 如果用户没有传递宽度，则计算宽度
+          if (!element.width) {
+            const contentWidth = maxLineLength * avgCharWidth;
+            calculatedWidth = Math.max(contentWidth + paddingX * 2, fontSize * 2); // 最小宽度为字体大小的2倍
+          }
+          
+          // 如果用户没有传递高度，则计算高度
+          if (!element.height) {
+            const contentHeight = lines.length * fontSize * lineHeight;
+            calculatedHeight = contentHeight + paddingY * 2;
+          }
+        }
+        
         return {
           ...baseElement,
           type: 'text',
-          text: element.text || '',
-          fontSize: element.fontSize || 20,
-          fontFamily: element.fontFamily || 1,
+          text: textContent,
+          fontSize: fontSize,
+          fontFamily: element.fontFamily || 5,
           textAlign: (element.textAlign as TextAlign) || 'left',
           verticalAlign: (element.verticalAlign as VerticalAlign) || 'top',
           strokeColor: element.strokeColor || '#1e1e1e',
@@ -233,9 +268,12 @@ const customConvertToExcalidrawElements = (
           strokeWidth: element.strokeWidth || 2, // 🔧 修复：增加默认描边宽度，提高自由绘制线条可见性
           strokeStyle: (element.strokeStyle as StrokeStyle) || 'solid',
           roughness: element.roughness || 1,
-          originalText: element.originalText || element.text || '',
+          originalText: element.originalText || textContent,
           autoResize: element.autoResize !== undefined ? element.autoResize : true,
-          lineHeight: element.lineHeight || 1.25,
+          lineHeight: lineHeight,
+          // 🔧 智能宽高：用户传递的优先，否则使用计算值
+          width: calculatedWidth,
+          height: calculatedHeight,
         } as ExcalidrawElement;
 
       case 'freedraw':
