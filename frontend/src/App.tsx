@@ -179,9 +179,9 @@ const customConvertToExcalidrawElements = (
           width: element.width || 100,
           height: element.height || 100,
           strokeColor: element.strokeColor || '#1e1e1e',
-          backgroundColor: element.backgroundColor || 'transparent',
+          backgroundColor: element.backgroundColor || 'transparent', // 🔧 修复：使用透明背景而非白色，避免遮挡其他元素
           fillStyle: (element.fillStyle as FillStyle) || 'solid',
-          strokeWidth: element.strokeWidth || 1,
+          strokeWidth: element.strokeWidth || 2, // 🔧 修复：增加默认描边宽度，提高自由绘制线条可见性 // 🔧 修复：增加默认描边宽度，提高可见性
           strokeStyle: (element.strokeStyle as StrokeStyle) || 'solid',
           roughness: element.roughness || 1,
           roundness: element.roundness || null,
@@ -196,7 +196,7 @@ const customConvertToExcalidrawElements = (
           strokeColor: element.strokeColor || '#1e1e1e',
           backgroundColor: element.backgroundColor || 'transparent',
           fillStyle: (element.fillStyle as FillStyle) || 'solid',
-          strokeWidth: element.strokeWidth || 1,
+          strokeWidth: element.strokeWidth || 2, // 🔧 修复：增加默认描边宽度，提高自由绘制线条可见性
           strokeStyle: (element.strokeStyle as StrokeStyle) || 'solid',
           roughness: element.roughness || 1,
           roundness: element.roundness || null,
@@ -230,7 +230,7 @@ const customConvertToExcalidrawElements = (
           strokeColor: element.strokeColor || '#1e1e1e',
           backgroundColor: element.backgroundColor || 'transparent',
           fillStyle: (element.fillStyle as FillStyle) || 'solid',
-          strokeWidth: element.strokeWidth || 1,
+          strokeWidth: element.strokeWidth || 2, // 🔧 修复：增加默认描边宽度，提高自由绘制线条可见性
           strokeStyle: (element.strokeStyle as StrokeStyle) || 'solid',
           roughness: element.roughness || 1,
           originalText: element.originalText || element.text || '',
@@ -246,9 +246,10 @@ const customConvertToExcalidrawElements = (
           strokeColor: element.strokeColor || '#1e1e1e',
           backgroundColor: element.backgroundColor || 'transparent',
           fillStyle: (element.fillStyle as FillStyle) || 'solid',
-          strokeWidth: element.strokeWidth || 1,
+          strokeWidth: element.strokeWidth || 2, // 🔧 修复：增加默认描边宽度，提高自由绘制线条可见性
           strokeStyle: (element.strokeStyle as StrokeStyle) || 'solid',
           roughness: element.roughness || 1,
+          roundness: element.roundness || null, // 🔧 修复：添加缺失的 roundness 属性
           pressures: (element.pressures as readonly number[]) || [] as readonly number[],
           simulatePressure: element.simulatePressure !== undefined ? element.simulatePressure : true,
           lastCommittedPoint: (element.lastCommittedPoint as LocalPoint) || null,
@@ -273,9 +274,9 @@ const customConvertToExcalidrawElements = (
           width: element.width || 200,
           height: element.height || 200,
           strokeColor: element.strokeColor || '#1e1e1e',
-          backgroundColor: element.backgroundColor || 'transparent',
+          backgroundColor: element.backgroundColor || 'transparent', // 🔧 修复：使用透明背景而非浅灰色，保持一致性
           fillStyle: (element.fillStyle as FillStyle) || 'solid',
-          strokeWidth: element.strokeWidth || 1,
+          strokeWidth: element.strokeWidth || 2, // 🔧 修复：增加默认描边宽度，提高自由绘制线条可见性 // 🔧 修复：增加默认描边宽度，提高可见性
           strokeStyle: (element.strokeStyle as StrokeStyle) || 'solid',
           roughness: element.roughness || 1,
           roundness: element.roundness || null,
@@ -291,9 +292,9 @@ const customConvertToExcalidrawElements = (
           width: element.width || 100,
           height: element.height || 100,
           strokeColor: element.strokeColor || '#1e1e1e',
-          backgroundColor: element.backgroundColor || 'transparent',
+          backgroundColor: element.backgroundColor || 'transparent', // 🔧 修复：使用透明背景而非白色，保持一致性
           fillStyle: (element.fillStyle as FillStyle) || 'solid',
-          strokeWidth: element.strokeWidth || 1,
+          strokeWidth: element.strokeWidth || 2, // 🔧 修复：增加默认描边宽度，提高自由绘制线条可见性 // 🔧 修复：增加默认描边宽度，提高可见性
           strokeStyle: (element.strokeStyle as StrokeStyle) || 'solid',
           roughness: element.roughness || 1,
         } as ExcalidrawElement;
