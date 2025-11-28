@@ -212,9 +212,9 @@ const ElementSchema = z.object({
   locked: z.boolean().optional(), // 是否锁定（锁定后不可编辑） (适用于所有元素类型)
   link: z.string().nullable().optional(), // 关联的超链接URL (适用于所有元素类型)
   customData: z.record(z.any()).nullable().optional(), // 自定义数据存储 (适用于所有元素类型)
-  boundElements: z.array(z.any()).nullable().optional(), // 绑定到此元素的其他元素列表 (适用于所有元素类型)
+  boundElements: z.array(z.any()).nullable().optional(), // 绑定到此元素的其他元素列表 - 使用时必须是双向绑定，如容器元素绑定文本元素时需要设置此字段 (适用于所有元素类型)
   updated: z.number().optional(), // 最后更新时间戳 (适用于所有元素类型)
-  containerId: z.string().nullable().optional(), // 容器元素ID（如文本绑定到的形状） (适用于所有元素类型)
+  containerId: z.string().nullable().optional(), // 容器元素ID（如文本绑定到的形状）- 只读字段，不能直接设置，需通过 boundElements 进行双向绑定 (适用于所有元素类型)
   
   // 文本元素专用属性 - Text Element Properties (仅限于 type 等于 text)
   text: z.string().optional(), // 文本内容 (仅限于 type 等于 text)
@@ -345,9 +345,9 @@ const tools: Tool[] = [
         locked: { type: 'boolean', description: '是否锁定（锁定后不可编辑） (适用于所有元素类型)' },
         link: { type: 'string', description: '关联的超链接URL (适用于所有元素类型)' },
         customData: { type: 'object', description: '自定义数据存储 (适用于所有元素类型)' },
-        boundElements: { type: 'array', description: '绑定到此元素的其他元素列表 (适用于所有元素类型)' },
+        boundElements: { type: 'array', description: '绑定到此元素的其他元素列表 - 使用时必须是双向绑定，如容器元素绑定文本元素时需要设置此字段 (适用于所有元素类型)' },
         updated: { type: 'number', description: '最后更新时间戳 (适用于所有元素类型)' },
-        containerId: { type: 'string', description: '容器元素ID（如文本绑定到的形状） (适用于所有元素类型)' },
+        containerId: { type: 'string', description: '容器元素ID（如文本绑定到的形状）- 只读字段，不能直接设置，需通过 boundElements 进行双向绑定 (适用于所有元素类型)' },
         
         // 文本元素专用属性 - Text element properties (仅限于 type 等于 text)
         text: { type: 'string', description: '文本内容 (仅限于 type 等于 text)' },
@@ -511,9 +511,9 @@ const tools: Tool[] = [
         locked: { type: 'boolean', description: '是否锁定（锁定后不可编辑） (适用于所有元素类型)' },
         link: { type: 'string', description: '关联的超链接URL (适用于所有元素类型)' },
         customData: { type: 'object', description: '自定义数据存储 (适用于所有元素类型)' },
-        boundElements: { type: 'array', description: '绑定到此元素的其他元素列表 (适用于所有元素类型)' },
+        boundElements: { type: 'array', description: '绑定到此元素的其他元素列表 - 使用时必须是双向绑定，如容器元素绑定文本元素时需要设置此字段 (适用于所有元素类型)' },
         updated: { type: 'number', description: '最后更新时间戳 (适用于所有元素类型)' },
-        containerId: { type: 'string', description: '容器元素ID（如文本绑定到的形状） (适用于所有元素类型)' },
+        containerId: { type: 'string', description: '容器元素ID（如文本绑定到的形状）- 只读字段，不能直接设置，需通过 boundElements 进行双向绑定 (适用于所有元素类型)' },
         
         // 文本元素专用属性 - Text element properties (仅限于 type 等于 text)
         text: { type: 'string', description: '文本内容 (仅限于 type 等于 text)' },
@@ -847,9 +847,9 @@ const tools: Tool[] = [
               locked: { type: 'boolean', description: '是否锁定（锁定后不可编辑） (适用于所有元素类型)' },
               link: { type: 'string', description: '关联的超链接URL (适用于所有元素类型)' },
               customData: { type: 'object', description: '自定义数据存储 (适用于所有元素类型)' },
-              boundElements: { type: 'array', description: '绑定到此元素的其他元素列表 (适用于所有元素类型)' },
+              boundElements: { type: 'array', description: '绑定到此元素的其他元素列表 - 使用时必须是双向绑定，如容器元素绑定文本元素时需要设置此字段 (适用于所有元素类型)' },
               updated: { type: 'number', description: '最后更新时间戳 (适用于所有元素类型)' },
-              containerId: { type: 'string', description: '容器元素ID（如文本绑定到的形状） (适用于所有元素类型)' },
+              containerId: { type: 'string', description: '容器元素ID（如文本绑定到的形状）- 只读字段，不能直接设置，需通过 boundElements 进行双向绑定 (适用于所有元素类型)' },
               
               // Text element properties (仅限于 type 等于 text)
               text: { type: 'string', description: '文本内容 (仅限于 type 等于 text)' },
