@@ -195,7 +195,7 @@ const ElementSchema = z.object({
   strokeWidth: z.number().optional(), // 边框线条粗细 (适用于所有形状元素类型)
   strokeStyle: z.string().optional(), // 边框样式：实线、虚线、点线 (适用于所有形状元素类型)
   roughness: z.number().optional(), // 手绘粗糙度（0-2，0为完全光滑） (适用于所有形状元素类型)
-  opacity: z.number().optional(), // 透明度（0-1） (适用于所有元素类型)
+  opacity: z.number().optional(), // 透明度（0-100，默认值100） (适用于所有元素类型)
   
   // 组织结构属性 - Organization Properties (所有元素通用)
   groupIds: z.array(z.string()).optional(), // 所属组的ID列表（元素可以属于多个组） (适用于所有元素类型)
@@ -324,7 +324,7 @@ const tools: Tool[] = [
         strokeWidth: { type: 'number', description: '边框线条粗细（像素） (适用于所有形状元素类型)' },
         strokeStyle: { type: 'string', description: '边框样式：solid(实线), dashed(虚线), dotted(点线) (适用于所有形状元素类型)' },
         roughness: { type: 'number', description: '手绘粗糙度（0-2，0为完全光滑，2为最粗糙） (适用于所有形状元素类型)' },
-        opacity: { type: 'number', description: '透明度（0-1，0为完全透明，1为完全不透明） (适用于所有元素类型)' },
+        opacity: { type: 'number', description: '透明度（0-100，0为完全透明，100为完全不透明，默认值100） (适用于所有元素类型)' },
         groupIds: { 
           type: 'array',
           items: { type: 'string' },
@@ -490,7 +490,7 @@ const tools: Tool[] = [
         strokeWidth: { type: 'number', description: '边框线条粗细（像素） (适用于所有形状元素类型)' },
         strokeStyle: { type: 'string', description: '边框样式：solid(实线), dashed(虚线), dotted(点线) (适用于所有形状元素类型)' },
         roughness: { type: 'number', description: '手绘粗糙度（0-2，0为完全光滑，2为最粗糙） (适用于所有形状元素类型)' },
-        opacity: { type: 'number', description: '透明度（0-1，0为完全透明，1为完全不透明） (适用于所有元素类型)' },
+        opacity: { type: 'number', description: '透明度（0-100，0为完全透明，100为完全不透明，默认值100） (适用于所有元素类型)' },
         groupIds: { 
           type: 'array',
           items: { type: 'string' },
@@ -826,7 +826,7 @@ const tools: Tool[] = [
               strokeWidth: { type: 'number', description: '边框线条粗细（像素） (适用于所有形状元素类型)' },
               strokeStyle: { type: 'string', description: '边框样式：solid(实线), dashed(虚线), dotted(点线) (适用于所有形状元素类型)' },
               roughness: { type: 'number', description: '手绘粗糙度（0-2，0为完全光滑，2为最粗糙） (适用于所有形状元素类型)' },
-              opacity: { type: 'number', description: '透明度（0-1，0为完全透明，1为完全不透明） (适用于所有元素类型)' },
+              opacity: { type: 'number', description: '透明度（0-100，0为完全透明，100为完全不透明，默认值100） (适用于所有元素类型)' },
               groupIds: { 
                 type: 'array',
                 items: { type: 'string' },
