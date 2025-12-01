@@ -180,7 +180,7 @@ const sceneState: SceneState = {
 // Schema definitions using zod - Excalidraw 元素的数据验证模式
 const ElementSchema = z.object({
   // 基础属性 - Basic Properties (所有元素类型通用)
-  id: z.string().optional(), // 元素ID，可选，如果不提供则自动生成
+  id: z.string().optional(), // 元素ID，建议由调用方预先生成并传递以确保全局唯一，如果不传递则由系统自动生成
   type: z.enum(Object.values(EXCALIDRAW_ELEMENT_TYPES) as [ExcalidrawElementType, ...ExcalidrawElementType[]]), // 元素类型：矩形、椭圆、菱形、箭头、文本、线条、自由绘制等
   x: z.number(), // X坐标位置 (适用于所有元素类型)
   y: z.number(), // Y坐标位置 (适用于所有元素类型)
@@ -308,6 +308,7 @@ const tools: Tool[] = [
     inputSchema: {
       type: 'object',
       properties: {
+        id: { type: 'string', description: '元素ID，建议由调用方预先生成并传递以确保全局唯一，如果不传递则由系统自动生成' },
         type: { 
           type: 'string', 
           enum: Object.values(EXCALIDRAW_ELEMENT_TYPES),
@@ -810,6 +811,7 @@ const tools: Tool[] = [
           items: {
             type: 'object',
             properties: {
+              id: { type: 'string', description: '元素ID，建议由调用方预先生成并传递以确保全局唯一，如果不传递则由系统自动生成' },
               type: { 
                 type: 'string', 
                 enum: Object.values(EXCALIDRAW_ELEMENT_TYPES),
@@ -954,9 +956,9 @@ const tools: Tool[] = [
               pressures: {
                 type: 'array',
                 items: { type: 'number' },
-          description: '每个点的压力值数组（用于模拟画笔压感） (仅限于 type 等于 freedraw)'
-        },
-        simulatePressure: { type: 'boolean', description: '是否模拟压力效果 (仅限于 type 等于 freedraw)' },
+                description: '每个点的压力值数组（用于模拟画笔压感） (仅限于 type 等于 freedraw)'
+              },
+              simulatePressure: { type: 'boolean', description: '是否模拟压力效果 (仅限于 type 等于 freedraw)' },
               
               // Frame element properties (仅限于 type 等于 frame)
               children: {
