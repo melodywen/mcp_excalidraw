@@ -249,7 +249,7 @@ const customConvertToExcalidrawElements = (
           strokeStyle: (element.strokeStyle as StrokeStyle) || 'solid',
           roughness: element.roughness || 1,
           originalText: element.originalText || textContent,
-          autoResize: element.autoResize !== undefined ? element.autoResize : false, // 默认不自动调整
+          autoResize: element.autoResize !== undefined ? element.autoResize : true, // 文本元素默认自动调整大小
           lineHeight: lineHeight,
           // 根据 autoResize 设置使用对应的宽高值
           width: finalWidth,
