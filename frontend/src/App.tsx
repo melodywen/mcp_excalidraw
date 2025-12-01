@@ -483,7 +483,7 @@ function App(): JSX.Element {
 
     try {
       const currentElements = excalidrawAPI.getSceneElements()
-      console.log('Current elements:', currentElements);
+      console.log('Current elements:', currentElements,JSON.stringify(currentElements));
 
       switch (data.type) {
         case 'initial_elements':
