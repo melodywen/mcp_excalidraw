@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import {
   Excalidraw, 
   CaptureUpdateAction,
-  ExcalidrawImperativeAPI
+  ExcalidrawImperativeAPI,
+  useHandleLibrary
 } from '@excalidraw/excalidraw'
 import type { 
   ExcalidrawElement,
@@ -377,6 +378,11 @@ function App(): JSX.Element {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle')
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null)
 
+  // Handle library imports from URL (e.g., #addLibrary=...)
+  useHandleLibrary({ 
+    excalidrawAPI: excalidrawAPI as any
+  })
+
   // WebSocket connection
   useEffect(() => {
     connectWebSocket()
@@ -721,6 +727,7 @@ function App(): JSX.Element {
       <div className="canvas-container">
         <Excalidraw
           excalidrawAPI={(api: ExcalidrawAPIRefValue) => setExcalidrawAPI(api)}
+          libraryReturnUrl={window.location.origin + window.location.pathname}
           initialData={{
             elements: [],
             appState: {
