@@ -116,12 +116,60 @@ provider:
     - `containerId`: **(核心关系)** 此属性是文本放入形状的关键。将其值设置为目标容器元素的`id`。
     - `autoResize`: 是否自动调整文本框大小，默认为true。`true`时文本自动扩展，`false`时使用指定的width/height。
     - `lineHeight`: 行高倍数，默认为1.25。如 `1.0`, `1.25`, `1.5`。
-    - **⚠️ 文本绑定到容器时的坐标规则**: 当文本设置了`containerId`绑定到容器时:
-      - 文本的 `x` = 容器的 `x` + 10 (左侧留白10px)
-      - 文本的 `y` = 容器的 `y` + 10 (顶部留白10px)
-      - 文本的 `width` = 容器的 `width` - 20 (左右各留白10px)
-      - 文本的 `height` = 容器的 `height` - 20 (上下各留白10px)
-      - 设置 `textAlign: "center"` 和 `verticalAlign: "middle"` 实现居中显示
+    - **⚠️ 文本绑定到容器时的坐标和尺寸规则 [重要]**: 当文本设置了`containerId`绑定到容器时:
+      - **必须手动指定文本的 `width` 和 `height`**，否则前端无法正确渲染文本
+      - **文本坐标计算**: 
+        - `x` = 容器 `x` + 10（左边留白10px）
+        - `y` = 容器 `y` + (容器 `height` - 文本 `height`) / 2（垂直居中）
+      - **文本尺寸计算**:
+        - `width` = 容器 `width` - 20（左右各留白10px）
+        - `height` = 文本行数 × `fontSize` × `lineHeight`
+        - 单行文本（fontSize=20, lineHeight=1.25）：height = 1 × 20 × 1.25 = **25**
+        - 两行文本（fontSize=20, lineHeight=1.25）：height = 2 × 20 × 1.25 = **50**
+        - 三行文本（fontSize=18, lineHeight=1.25）：height = 3 × 18 × 1.25 = **67.5** (可取整为68)
+      - **居中设置**: 设置 `textAlign: "center"` 和 `verticalAlign: "middle"` 实现完全居中显示
+      - **示例1（矩形容器 200x80，单行文本）**:
+        ```json
+        {
+          "text": "容器标题",
+          "x": 110,              // 容器x(100) + 10
+          "y": 127,              // 容器y(100) + (80 - 25)/2 = 127.5 → 127
+          "width": 180,          // 容器width(200) - 20
+          "height": 25,          // 1 × 20 × 1.25 = 25
+          "containerId": "rect-1",
+          "fontSize": 20,
+          "fontFamily": 1,
+          "textAlign": "center",
+          "verticalAlign": "middle",
+          "lineHeight": 1.25
+        }
+        ```
+      - **示例2（矩形容器 200x120，三行文本）**:
+        ```json
+        {
+          "text": "API服务器\n(Node.js)\nPort: 3000",
+          "x": 110,              // 容器x(100) + 10
+          "y": 122,              // 容器y(100) + (120 - 75)/2 = 122.5 → 122
+          "width": 180,          // 容器width(200) - 20
+          "height": 75,          // 3 × 20 × 1.25 = 75
+          "containerId": "rect-2",
+          "fontSize": 20,
+          "fontFamily": 1,
+          "textAlign": "center",
+          "verticalAlign": "middle",
+          "lineHeight": 1.25
+        }
+        ```
+      - **文本 height 精确计算表格**:
+        
+        | 行数 | fontSize | lineHeight | 计算公式 | height |
+        |------|----------|------------|----------|--------|
+        | 1行 | 20 | 1.25 | 1 × 20 × 1.25 | **25** |
+        | 2行 | 20 | 1.25 | 2 × 20 × 1.25 | **50** |
+        | 3行 | 20 | 1.25 | 3 × 20 × 1.25 | **75** |
+        | 2行 | 18 | 1.25 | 2 × 18 × 1.25 | **45** |
+        | 3行 | 18 | 1.25 | 3 × 18 × 1.25 | **67.5** → 68 |
+        | 1行 | 22 | 1.25 | 1 × 22 × 1.25 | **27.5** → 28 |
 
 4.  **线性/箭头 (`line`, `arrow`)**
     - `points`: **必须**. 定义路径的点坐标数组，**相对于元素自身的(x, y)点**。最简单的直线是 `[[0, 0], [width, height]]`。
@@ -135,56 +183,42 @@ provider:
 
     - **场景**: 当一个元素里面包含一个描述文本的时候，比如矩形a里面有一个text，则必须要把text和a关联起来
     - **原理**: 必须建立双向链接。容器元素通过boundElements指向文本，文本通过containerId指回容器
-    - **高效工作流程（推荐预设ID）**:
-      1. 预先生成容器ID和文本ID
-      2. 使用 `create_element` 工具创建容器元素，传递预设的容器ID
-      3. 使用 `create_element` 工具创建文本元素，传递预设的文本ID，并在 `containerId` 中使用容器ID
-      4. 使用 `update_element` 工具更新容器元素，在 `boundElements` 中添加文本ID
-    - **传统工作流程（系统生成ID）**:
-      1. 使用 `create_element` 工具创建容器元素（系统自动生成ID）
-      2. **记录返回的容器ID**
-      3. 使用 `create_element` 工具创建文本元素，在 `containerId` 中使用步骤2记录的容器ID
-      4. **记录返回的文本ID**
-      5. 使用 `update_element` 工具更新容器元素，在 `boundElements` 中添加步骤4记录的文本ID
+    - **推荐方式**: 使用 `batch_create_elements` 一次性创建并建立绑定关系
     - **示例**:
       ```json
-      // 1. 创建容器元素（系统自动生成ID）
-      create_element({
-        "type": "rectangle",
-        "x": 100,
-        "y": 100,
-        "width": 220,
-        "height": 80,
-        "backgroundColor": "#e3f2fd",
-        "strokeColor": "#1976d2",
-        "fillStyle": "solid"
-      })
-      // 返回: { "id": "elem_container_abc123", ... }
-      
-      // 2. 创建文本元素并绑定到容器（使用返回的容器ID）
-      create_element({
-        "type": "text",
-        "x": 210,  // 容器中心x: 100 + 220/2 = 210
-        "y": 140,  // 容器中心y: 100 + 80/2 = 140
-        "containerId": "elem_container_abc123",  // 使用步骤1返回的ID
-        "text": "核心API服务\n(Node.js)",
-        "originalText": "核心API服务\n(Node.js)",
-        "fontSize": 20,
-        "fontFamily": 2,
-        "textAlign": "center",
-        "verticalAlign": "middle",
-        "autoResize": true,  // 默认值，自动调整大小
-        "lineHeight": 1.25
-      })
-      // 返回: { "id": "elem_text_def456", ... }
-      
-      // 3. 更新容器元素建立双向绑定（使用返回的文本ID）
-      update_element({
-        "id": "elem_container_abc123",  // 使用步骤1返回的容器ID
-        "boundElements": [
+      batch_create_elements({
+        "elements": [
           {
+            "id": "api-server-1",
+            "type": "rectangle",
+            "x": 100,
+            "y": 100,
+            "width": 220,
+            "height": 100,
+            "backgroundColor": "#e3f2fd",
+            "strokeColor": "#1976d2",
+            "fillStyle": "solid",
+            "boundElements": [
+              {
+                "type": "text",
+                "id": "text-api-1"
+              }
+            ]
+          },
+          {
+            "id": "text-api-1",
             "type": "text",
-            "id": "elem_text_def456"  // 使用步骤2返回的文本ID
+            "x": 110,  // 容器x(100) + 10
+            "y": 112,  // 容器y(100) + (100 - 75)/2 = 112.5 → 112
+            "width": 200,  // 容器width(220) - 20
+            "height": 75,  // 3 × 20 × 1.25 = 75
+            "containerId": "api-server-1",
+            "text": "核心API服务\n(Node.js)\nPort: 8080",
+            "fontSize": 20,
+            "fontFamily": 1,  // 手写
+            "textAlign": "center",
+            "verticalAlign": "middle",
+            "lineHeight": 1.25
           }
         ]
       })
