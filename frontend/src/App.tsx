@@ -20,6 +20,7 @@ import type {
 import type { LocalPoint, Radians } from '@excalidraw/math'
 import { convertMermaidToExcalidraw, DEFAULT_MERMAID_CONFIG } from './utils/mermaidConverter'
 import type { MermaidConfig } from '@excalidraw/mermaid-to-excalidraw'
+import { libraryPersistenceAdapter, debugLibraryStorage } from './libraryStorage'
 
 // Type definitions
 type ExcalidrawAPIRefValue = ExcalidrawImperativeAPI;
@@ -379,8 +380,10 @@ function App(): JSX.Element {
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null)
 
   // Handle library imports from URL (e.g., #addLibrary=...)
+  // 🔧 FIX: Add IndexedDB persistence adapter to enable library item persistence
   useHandleLibrary({ 
-    excalidrawAPI: excalidrawAPI as any
+    excalidrawAPI: excalidrawAPI as any,
+    adapter: libraryPersistenceAdapter
   })
 
   // WebSocket connection
@@ -680,6 +683,12 @@ function App(): JSX.Element {
       }
     }
   }
+
+  // Expose debug function to global scope for easy testing
+  useEffect(() => {
+    (window as any).debugLibraryStorage = debugLibraryStorage;
+    console.log('🔍 Debug helper available: window.debugLibraryStorage()');
+  }, []);
 
   return (
     <div className="app">
