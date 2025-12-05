@@ -108,17 +108,20 @@ provider:
 3.  **文本 (`text`)**
 
     - `text`: **必须**. 显示的文本内容, 支持`\n`换行。
-    - `originalText`: **必须**. 用于后续编辑。
+    - `originalText`: **可选**. 原始文本内容，用于编辑器底层存储。如果不设置，Excalidraw 会自动使用 `text` 的值。
     - `fontSize`: 字体大小 (数字), 默认为20。如 `16`, `20`, `28`。
     - `fontFamily`: 字体类型: `1` (手写/Virgil), `2` (正常/Helvetica), `3` (代码/Cascadia)，默认为1。
     - `textAlign`: 水平对齐: `"left"`, `"center"`, `"right"`，默认为"left"。
     - `verticalAlign`: 垂直对齐: `"top"`, `"middle"`, `"bottom"`，默认为"top"。
     - `containerId`: **(核心关系)** 此属性是文本放入形状的关键。将其值设置为目标容器元素的`id`。
-    - **重要属性**: `autoResize: true` (默认值，自动调整大小), `lineHeight: 1.25`。
-    - **autoResize 行为说明**：
-      - `autoResize: true` (默认) - 文本自动调整大小，**前端会强制将用户传递的width/height设为0**，由Excalidraw自动计算
-      - `autoResize: false` - 使用用户指定的width/height值
-    - **⚠️ 重要提醒**: 当设置 `autoResize: true` 时，即使用户传递了具体的width/height值，前端也会将其强制设为0来启用自动调整。
+    - `autoResize`: 是否自动调整文本框大小，默认为true。`true`时文本自动扩展，`false`时使用指定的width/height。
+    - `lineHeight`: 行高倍数，默认为1.25。如 `1.0`, `1.25`, `1.5`。
+    - **⚠️ 文本绑定到容器时的坐标规则**: 当文本设置了`containerId`绑定到容器时:
+      - 文本的 `x` = 容器的 `x` + 10 (左侧留白10px)
+      - 文本的 `y` = 容器的 `y` + 10 (顶部留白10px)
+      - 文本的 `width` = 容器的 `width` - 20 (左右各留白10px)
+      - 文本的 `height` = 容器的 `height` - 20 (上下各留白10px)
+      - 设置 `textAlign: "center"` 和 `verticalAlign: "middle"` 实现居中显示
 
 4.  **线性/箭头 (`line`, `arrow`)**
     - `points`: **必须**. 定义路径的点坐标数组，**相对于元素自身的(x, y)点**。最简单的直线是 `[[0, 0], [width, height]]`。
