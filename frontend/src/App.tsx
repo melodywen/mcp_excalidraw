@@ -225,17 +225,6 @@ const customConvertToExcalidrawElements = (
         const fontSize = element.fontSize || 20;
         const lineHeight = element.lineHeight || 1.25;
         
-        // 🔧 根据 autoResize 设置决定宽高处理策略
-        let finalWidth = element.width;
-        let finalHeight = element.height;
-        
-        // 如果用户启用了 autoResize，强制将宽高设为 0，让 Excalidraw 自动计算
-        if (element.autoResize === true) {
-          finalWidth = 0;
-          finalHeight = 0;
-        }
-        // 如果用户没有设置 autoResize 或设为 false，使用用户传递的值（可能为 undefined）
-        
         return {
           ...baseElement,
           type: 'text',
@@ -247,15 +236,14 @@ const customConvertToExcalidrawElements = (
           strokeColor: element.strokeColor || '#1e1e1e',
           backgroundColor: element.backgroundColor || 'transparent',
           fillStyle: (element.fillStyle as FillStyle) || 'solid',
-          strokeWidth: element.strokeWidth || 2, // 🔧 修复：增加默认描边宽度，提高自由绘制线条可见性
+          strokeWidth: element.strokeWidth || 2,
           strokeStyle: (element.strokeStyle as StrokeStyle) || 'solid',
           roughness: element.roughness || 1,
           originalText: element.originalText || textContent,
-          autoResize: element.autoResize !== undefined ? element.autoResize : true, // 文本元素默认自动调整大小
+          autoResize: element.autoResize !== undefined ? element.autoResize : true,
           lineHeight: lineHeight,
-          // 根据 autoResize 设置使用对应的宽高值
-          width: finalWidth,
-          height: finalHeight,
+          width: element.width,
+          height: element.height,
         } as ExcalidrawElement;
 
       case 'freedraw':
