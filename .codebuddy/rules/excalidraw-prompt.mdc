@@ -62,7 +62,7 @@ provider:
 | `opacity`         | number   | 透明度 (0-100)，0为完全透明，100为完全不透明，默认为100。                     | `100`, `50`               |
 | `groupIds`        | string[] | **(关系)** 元素所属的一个或多个组的ID列表。                                   | `["group-A"]`             |
 | `frameId`         | string   | **(关系)** 元素所属的框架ID。                                                 | `"frame-data-layer"`      |
-| `roundness`       | object/null | 圆角设置。`null`表示锐角，`{"type": 1}`表示自适应圆角，`{"type": 2}`表示直角，`{"type": 3, "value": 32}`表示指定圆角半径。默认根据元素类型自动设置。 | `{"type": 3, "value": 8}` |
+| `roundness`       | object/null | 圆角设置。对于形状：`null`表示锐角（无圆角），`{"type": 1}`表示自适应圆角，`{"type": 2}`表示自适应圆角（效果与type 1类似），`{"type": 3, "value": 32}`表示指定圆角半径。对于箭头/线条：`{"type": 2}`表示平滑圆角曲线，`null`表示直线折线（尖角）。默认根据元素类型自动设置。 | `{"type": 3, "value": 8}` |
 | `seed`            | number   | 随机种子，用于生成一致的手绘效果，默认自动生成。                               | `1234567890`              |
 | `versionNonce`    | number   | 版本随机数，用于协作时的冲突解决，默认自动生成。                               | `987654321`               |
 | `isDeleted`       | boolean  | 是否已删除（软删除标记），默认为false。                                        | `false`                   |
@@ -175,6 +175,23 @@ provider:
     - `points`: **必须**. 定义路径的点坐标数组，**相对于元素自身的(x, y)点**。最简单的直线是 `[[0, 0], [width, height]]`。
     - `startArrowhead`: 起始箭头样式，可为 `"arrow"`, `"dot"`, `"triangle"`, `"bar"` 或 `null`，默认为`null`。
     - `endArrowhead`: 结束箭头样式，同上，`arrow`类型默认为`"arrow"`。
+    - `roundness`: 箭头曲线类型
+      - `{"type": 2}` → 平滑圆角曲线
+      - `null` → 直线折线（尖角）
+    - `elbowed`: 是否为肘形箭头（90度直角转弯），默认为`false`
+      - `true` → 肘形箭头（直角转弯）
+      - `false` → 普通箭头
+    - **⚠️ 重要**: 创建箭头时必须指定 `points` 属性，不能只设置 `width` 和 `height`。否则箭头可能无法正确渲染或连接到目标元素。
+      - ✅ 正确: `"points": [[0, 0], [160, 0]]`
+      - ❌ 错误: 只设置 `"width": 160, "height": 0` 而不设置 `points`
+    
+    **箭头类型对照表**:
+    
+    | 箭头类型 | `roundness` | `elbowed` | 视觉效果 |
+    |---------|------------|-----------|---------|
+    | 平滑曲线 | `{"type": 2}` | `false` | 圆角平滑曲线 |
+    | 直线折线 | `null` | `false` | 尖角折线 |
+    | 肘形箭头 | `null` | `true` | 90度直角转弯 |
 
 
 ### C. 元素关系创建规则（必须）
@@ -227,77 +244,56 @@ provider:
 2.  **绑定 (Binding): 将箭头连接到元素**
 
     - **场景**: 当箭头或连线需要连接两个元素时，必须建立绑定关系
-    - **原理**: 必须建立双向链接。箭头通过start和end指向源/目标元素，同时源/目标元素也必须通过boundElements指回箭头。
-    - **高效工作流程（推荐预设ID）**:
-      1. 预先生成源元素、目标元素和箭头的ID
-      2. 使用 `create_element` 工具创建源元素、目标元素和箭头，传递预设ID
-      3. 使用 `update_element` 工具设置箭头的 startBinding 和 endBinding
-      4. 使用 `update_element` 工具更新源元素和目标元素的 boundElements
-    - **传统工作流程（系统生成ID）**:
-      1. 使用 `create_element` 工具创建源元素（记录返回的ID）
-      2. 使用 `create_element` 工具创建目标元素（记录返回的ID）
-      3. 使用 `create_element` 工具创建箭头元素（记录返回的ID）
-      4. 使用 `update_element` 工具设置箭头的 startBinding 和 endBinding
-      5. 使用 `update_element` 工具更新源元素和目标元素的 boundElements
+    - **原理**: 必须建立双向链接。箭头通过startBinding/endBinding指向源/目标元素，同时源/目标元素也必须通过boundElements指回箭头。
+    - **推荐方式**: 使用 `batch_create_elements` 一次性创建并建立绑定关系
     - **示例**:
       ```json
-      // 1. 创建源元素
-      create_element({
-        "type": "rectangle",
-        "x": 100,
-        "y": 300,
-        "width": 150,
-        "height": 60
-      })
-      // 返回: { "id": "elem_source_abc123", ... }
-      
-      // 2. 创建目标元素
-      create_element({
-        "type": "rectangle",
-        "x": 400,
-        "y": 300,
-        "width": 150,
-        "height": 60
-      })
-      // 返回: { "id": "elem_target_def456", ... }
-      
-      // 3. 创建箭头
-      create_element({
-        "type": "arrow",
-        "x": 250,
-        "y": 330,
-        "width": 150,
-        "height": 1,
-        "endArrowhead": "arrow",
-        "points": [[0, 0], [150, 0]]
-      })
-      // 返回: { "id": "elem_arrow_ghi789", ... }
-      
-      // 4. 设置箭头的绑定关系
-      update_element({
-        "id": "elem_arrow_ghi789",
-        "startBinding": {
-          "elementId": "elem_source_abc123",
-          "focus": 0.0,
-          "gap": 5
-        },
-        "endBinding": {
-          "elementId": "elem_target_def456",
-          "focus": 0.0,
-          "gap": 5
-        }
-      })
-      
-      // 5. 更新源元素的绑定关系
-      update_element({
-        "id": "elem_source_abc123",
-        "boundElements": [{ "id": "elem_arrow_ghi789", "type": "arrow" }]
-      })
-      
-      // 6. 更新目标元素的绑定关系
-      update_element({
-        "id": "elem_target_def456",
-        "boundElements": [{ "id": "elem_arrow_ghi789", "type": "arrow" }]
+      batch_create_elements({
+        "elements": [
+          {
+            "id": "rect-source",
+            "type": "rectangle",
+            "x": 100,
+            "y": 100,
+            "width": 180,
+            "height": 100,
+            "backgroundColor": "#e3f2fd",
+            "strokeColor": "#1565c0",
+            "fillStyle": "solid",
+            "boundElements": [{"id": "arrow-1", "type": "arrow"}]
+          },
+          {
+            "id": "ellipse-target",
+            "type": "ellipse",
+            "x": 450,
+            "y": 90,
+            "width": 180,
+            "height": 120,
+            "backgroundColor": "#f3e5f5",
+            "strokeColor": "#6a1b9a",
+            "fillStyle": "solid",
+            "boundElements": [{"id": "arrow-1", "type": "arrow"}]
+          },
+          {
+            "id": "arrow-1",
+            "type": "arrow",
+            "x": 280,
+            "y": 150,
+            "points": [[0, 0], [170, 0]],
+            "strokeColor": "#d32f2f",
+            "strokeWidth": 2,
+            "startBinding": {
+              "elementId": "rect-source",  // 绑定的起点元素ID
+              "focus": 0.0,  // 连接点在元素边缘的位置（-1到1之间，0为中心）
+              "gap": 5  // 箭头末端与元素边缘的间隙（像素）
+            },
+            "endBinding": {
+              "elementId": "ellipse-target",  // 绑定的终点元素ID
+              "focus": 0.0,  // 连接点在元素边缘的位置（-1到1之间，0为中心）
+              "gap": 5  // 箭头末端与元素边缘的间隙（像素）
+            }
+          }
+        ]
       })
       ```
 
