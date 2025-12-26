@@ -2,11 +2,11 @@
 
 本文档提供使用 MCP API 操作 Excalidraw 元素的完整 schema 规范。
 
-## 元素骨架概念
+## 1. 元素骨架概念
 
 通过 API 创建元素时，只需提供 `ExcalidrawElementSkeleton`（元素骨架）——一个仅包含必要属性的简化对象。Excalidraw 前端会自动填充版本号、随机种子等内部属性。
 
-## 通用属性
+## 2. 通用属性
 
 所有元素类型都支持以下属性：
 
@@ -14,8 +14,10 @@
 |------|------|------|--------|------|
 | `id` | string | **可选，复杂图表推荐设置**。唯一标识符。不提供则系统自动生成。 | 自动生成 | `"elem_abc123"` |
 | `type` | string | **必需**。元素类型：`rectangle`（矩形）、`ellipse`（椭圆）、`diamond`（菱形）、`arrow`（箭头）、`text`（文本）、`line`（线条）、`frame`（框架）、`freedraw`（自由绘制） | - | `"rectangle"` |
-| `x`, `y` | number | **必需**。元素左上角在画布上的坐标 | - | `150`, `300` |
-| `width`, `height` | number | 元素尺寸。对于 `autoResize=true` 的 `text` 元素，强制为 0 | 0 | `200`, `80` |
+| `x` | number | **必需**。元素左上角在画布上的 X 坐标 | - | `150` |
+| `y` | number | **必需**。元素左上角在画布上的 Y 坐标 | - | `300` |
+| `width` | number | 元素宽度。对于 `autoResize=true` 的 `text` 元素，强制为 0 | `0` | `200` |
+| `height` | number | 元素高度。对于 `autoResize=true` 的 `text` 元素，强制为 0 | `0` | `80` |
 | `angle` | number | 旋转角度（弧度） | `0` | `1.57`（90°） |
 | `strokeColor` | string | 边框颜色（十六进制） | `"#1e1e1e"` | `"#1976d2"` |
 | `backgroundColor` | string | 填充颜色（十六进制） | `"transparent"` | `"#e3f2fd"` |
@@ -26,32 +28,83 @@
 | `opacity` | number | 透明度（0-100）。0=完全透明，100=完全不透明 | `100` | `50` |
 | `groupIds` | string[] | **（关系）**此元素所属的组 ID 列表 | `[]` | `["group-A"]` |
 | `frameId` | string | **（关系）**包含此元素的框架 ID | `null` | `"frame-1"` |
-| `roundness` | object/null | 圆角设置。详见下文 | 不同 | `{"type": 3, "value": 16}` |
+| `roundness` | object/null | 圆角设置。详见 2.1 节 | 不同 | `{"type": 3, "value": 16}` |
 | `locked` | boolean | 是否锁定（不可编辑） | `false` | `true` |
 | `link` | string | 超链接 URL | `null` | `"https://example.com"` |
 | `customData` | object | 自定义元数据存储 | `{}` | `{"category": "db"}` |
 | `boundElements` | array | **（关系）**绑定到此元素的其他元素（箭头、文本）。**必须形成双向绑定** | `[]` | `[{"id": "arrow-1", "type": "arrow"}]` |
 | `containerId` | string | **（关系）**容器元素 ID（用于文本）。**必须与容器的 `boundElements` 形成双向绑定** | `null` | `"rect-1"` |
 
-### Roundness 属性详解
+### 2.1 ID 生成策略
 
-**对于形状（rectangle、diamond）**：
-- `null` → 尖角（无圆角）
-- `{"type": 1}` → 自适应圆角半径
-- `{"type": 2}` → 自适应圆角半径（与 type 1 类似）
-- `{"type": 3, "value": 32}` → 指定像素半径
+推荐使用**预设 ID 模式**以获得最佳效率：
 
-**对于箭头/线条**：
-- `null` → 尖角折线
-- `{"type": 2}` → 平滑曲线
+| 模式 | 方式 | ID格式 | 适用场景 |
+|------|------|--------|---------|
+| **预设ID（推荐）** | 调用方预先生成ID并传递 | 有意义的命名，如 `rect_main`, `text_title` | 复杂图表、批量创建、需要直接建立绑定关系 |
+| **系统自动生成** | 不传递ID，从返回值获取 | 随机字符串 | 简单场景、不确定ID时 |
 
-## 形状元素（rectangle、ellipse、diamond）
+**预设ID工作流**：
+1. 规划图表结构，生成所有元素ID
+2. 调用 `batch_create_elements` 传递预设ID
+3. 创建时直接设置绑定关系（boundElements, containerId等）
+
+**ID命名规范**：使用描述性前缀，如 `container_main`、`text_title`、`arrow_flow1`
+
+**优势**：
+- 一次批量调用创建完整的绑定关系
+- 有意义的命名提高可维护性
+- 无需多步骤建立关系
+
+**示例**：
+```json
+batch_create_elements({
+  elements: [
+    {
+      "id": "api-server-main",      // ← 有意义的预设 ID
+      "type": "rectangle",
+      "boundElements": [
+        {"id": "text-api-label", "type": "text"}  // ← 可以立即引用
+      ]
+    },
+    {
+      "id": "text-api-label",       // ← 有意义的预设 ID
+      "type": "text",
+      "containerId": "api-server-main"  // ← 关系立即建立
+    }
+  ]
+})
+```
+
+**系统生成 ID 模式**：
+
+| 步骤 | 操作 |
+|------|------|
+| 1 | 调用 `create_element` 不传 `id` |
+| 2 | 从响应中提取生成的 ID |
+| 3 | 存储 ID 以备后用 |
+| 4 | 使用 `update_element` 建立关系 |
+
+**何时使用**：简单场景，不需要预先建立关系。
+
+### 2.2 Roundness 属性详解
+
+| 元素类型 | roundness 值 | 效果 |
+|---------|-------------|------|
+| **形状（rectangle、diamond）** | `null` | 尖角（无圆角） |
+| | `{"type": 1}` | 自适应圆角半径 |
+| | `{"type": 2}` | 自适应圆角半径（与 type 1 类似） |
+| | `{"type": 3, "value": 32}` | 指定像素半径（32px） |
+| **箭头/线条** | `null` | 尖角折线 |
+| | `{"type": 2}` | 平滑曲线 |
+
+## 3. 形状元素（rectangle、ellipse、diamond）
 
 **关键概念**：形状本身不直接包含文本。要添加标签，需创建单独的 `text` 元素并使用 `containerId` 绑定。
 
 **推荐**：为将作为容器或箭头目标的形状预设 ID。
 
-### 示例：带文本的矩形
+### 3.1 示例：带文本的矩形
 
 ```json
 [
@@ -87,18 +140,18 @@
 ]
 ```
 
-## 框架元素
+## 4. 框架元素（frame）
 
 **用途**：将画布组织为命名区域，类似于幻灯片或章节。
 
-### 框架专有属性
+### 4.1 框架专有属性
 
-| 属性 | 类型 | 描述 |
-|------|------|------|
-| `name` | string | 框架名称/标题 |
-| `children` | string[] | 框架内元素的 ID（自动管理） |
+| 属性 | 类型 | 描述 | 默认值 |
+|------|------|------|--------|
+| `name` | string | 框架名称/标题 | `""` |
+| `children` | string[] | 框架内元素的 ID（自动管理，无需手动设置） | `[]` |
 
-### 示例
+### 4.2 示例
 
 ```json
 {
@@ -123,15 +176,15 @@
 }
 ```
 
-## 文本元素
+## 5. 文本元素（text）
 
-### 文本专有属性
+### 5.1 文本专有属性
 
 | 属性 | 类型 | 描述 | 默认值 |
 |------|------|------|--------|
 | `text` | string | **必需**。显示文本。使用 `\n` 换行 | - |
 | `originalText` | string | 编辑器存储的原始文本。未设置时使用 `text` 值 | 同 `text` |
-| `fontSize` | number | 字体大小 | `20` |
+| `fontSize` | number | 字体大小（像素） | `20` |
 | `fontFamily` | number | 字体：`1`（Virgil/手写）、`2`（Helvetica/正常）、`3`（Cascadia/代码） | `1` |
 | `textAlign` | string | 水平对齐：`"left"`、`"center"`、`"right"` | `"left"` |
 | `verticalAlign` | string | 垂直对齐：`"top"`、`"middle"`、`"bottom"` | `"top"` |
@@ -139,15 +192,18 @@
 | `autoResize` | boolean | 自动扩展文本框 | `true` |
 | `lineHeight` | number | 行高倍数 | `1.25` |
 
-### ⚠️ 关键：容器中文本的定位
+### 5.2 ⚠️ 关键：容器中文本的定位
 
 当设置了 `containerId` 时，**必须手动指定 width 和 height**，否则渲染失败。
 
 **计算公式**：
-- `text.x` = `container.x + 10`
-- `text.y` = `container.y + (container.height - text.height) / 2`
-- `text.width` = `container.width - 20`
-- `text.height` = `行数 × fontSize × lineHeight`
+
+| 属性 | 计算公式 |
+|------|---------|
+| `text.x` | `container.x + 10` |
+| `text.y` | `container.y + (container.height - text.height) / 2` |
+| `text.width` | `container.width - 20` |
+| `text.height` | `行数 × fontSize × lineHeight` |
 
 **高度计算表**：
 
@@ -159,7 +215,7 @@
 | 2行 | 18 | 1.25 | 2 × 18 × 1.25 | **45** |
 | 3行 | 18 | 1.25 | 3 × 18 × 1.25 | **67.5** → 68 |
 
-### 示例：200x80 容器中的单行文本
+### 5.3 示例：200x80 容器中的单行文本
 
 ```json
 {
@@ -178,7 +234,7 @@
 }
 ```
 
-### 示例：200x120 容器中的三行文本
+### 5.4 示例：200x120 容器中的三行文本
 
 ```json
 {
@@ -197,19 +253,29 @@
 }
 ```
 
-## 箭头和线条元素
+## 6. 箭头和线条元素（arrow、line）
 
-### 箭头/线条专有属性
+### 6.1 箭头/线条专有属性
 
 | 属性 | 类型 | 描述 | 默认值 |
 |------|------|------|--------|
 | `points` | number[][] | **必需**。路径坐标点**相对于元素的 (x,y)**。至少 2 个点 | - |
 | `startArrowhead` | string/null | 起点箭头样式：`"arrow"`、`"dot"`、`"triangle"`、`"bar"`、`null` | `null` |
-| `endArrowhead` | string/null | 终点箭头样式 | `"arrow"`（箭头类型） |
+| `endArrowhead` | string/null | 终点箭头样式：`"arrow"`、`"dot"`、`"triangle"`、`"bar"`、`null` | `"arrow"`（箭头类型） |
 | `roundness` | object/null | 曲线类型。`{"type": 2}` = 平滑曲线，`null` = 直线/尖角 | `{"type": 2}` |
 | `elbowed` | boolean | 90° 直角转折（肘形箭头） | `false` |
+| `startBinding` | object/null | 起点绑定的元素信息。详见 6.2 节 | `null` |
+| `endBinding` | object/null | 终点绑定的元素信息。详见 6.2 节 | `null` |
 
-### 箭头类型对照表
+### 6.2 绑定对象属性（Binding）
+
+| 属性 | 类型 | 描述 |
+|------|------|------|
+| `elementId` | string | 目标元素 ID |
+| `focus` | number | 边缘位置（-1 到 1，0=中心） |
+| `gap` | number | 箭头与元素的像素间隙 |
+
+### 6.3 箭头类型对照表
 
 | 类型 | `roundness` | `elbowed` | 视觉效果 |
 |------|-------------|-----------|---------|
@@ -217,7 +283,7 @@
 | 直线折线 | `null` | `false` | 尖角折线 |
 | 肘形箭头 | `null` | `true` | 90° 直角转折 |
 
-### ⚠️ 关键：箭头 Points
+### 6.4 ⚠️ 关键：箭头 Points
 
 **必须指定 `points` 数组**。不能只依赖 `width`/`height`。
 
@@ -243,7 +309,7 @@
 }
 ```
 
-### 示例：简单的水平箭头
+### 6.5 示例：简单的水平箭头
 
 ```json
 {
@@ -258,7 +324,7 @@
 }
 ```
 
-### 示例：带绑定的肘形箭头
+### 6.6 示例：带绑定的肘形箭头
 
 ```json
 {
@@ -289,13 +355,16 @@
 }
 ```
 
-## 关系机制深度解析
+## 7. 关系机制深度解析
 
-### 1. 容器中的文本（双向绑定）
+### 7.1 容器中的文本（双向绑定）
 
-**必需**：
-- 容器：`boundElements` 数组包含文本
-- 文本：`containerId` 引用容器
+**必需关系**：
+
+| 方向 | 设置方式 |
+|------|---------|
+| 容器 → 文本 | 容器的 `boundElements` 数组包含文本 ID 和类型 |
+| 文本 → 容器 | 文本的 `containerId` 引用容器 ID |
 
 **示例**：
 ```json
@@ -313,20 +382,14 @@
 }
 ```
 
-### 2. 箭头绑定（双向绑定）
+### 7.2 箭头绑定（双向绑定）
 
-**必需**：
-- 箭头：`startBinding` 和 `endBinding` 引用元素
-- 源/目标元素：`boundElements` 数组包含箭头
+**必需关系**：
 
-**绑定对象属性**：
-```typescript
-{
-  "elementId": string,   // 目标元素 ID
-  "focus": number,       // 边缘位置（-1 到 1，0=中心）
-  "gap": number          // 箭头与元素的像素间隙
-}
-```
+| 方向 | 设置方式 |
+|------|---------|
+| 箭头 → 元素 | 箭头的 `startBinding` 和 `endBinding` 引用元素 ID |
+| 元素 → 箭头 | 元素的 `boundElements` 数组包含箭头 ID 和类型 |
 
 **完整示例**：
 ```json
@@ -375,16 +438,16 @@
 ]
 ```
 
-### 3. 元素分组
+### 7.3 元素分组
 
-**方法 1**：使用 `group_elements` MCP 工具
+**方法 1：使用 MCP 工具**
 ```typescript
 group_elements({
   elementIds: ["elem-1", "elem-2", "elem-3"]
 })
 ```
 
-**方法 2**：手动设置 `groupIds`
+**方法 2：手动设置 groupIds**
 ```json
 {
   "id": "elem-1",
@@ -398,9 +461,10 @@ group_elements({
 
 **效果**：分组元素在 UI 中一起移动和变换。
 
-### 4. 框架分配
+### 7.4 框架分配
 
 **方法**：设置元素的 `frameId` 为框架的 `id`
+
 ```json
 {
   "id": "frame-data",
@@ -420,93 +484,47 @@ group_elements({
 }
 ```
 
-## ID 生成策略
+## 8. 常用配色方案
 
-### 预设 ID 模式（推荐）
+### 8.1 架构图配色
 
-**优势**：
-- 一次批量调用创建完整的绑定关系
-- 有意义的命名提高可维护性
-- 无需多步骤建立关系
+| 类别 | backgroundColor | strokeColor |
+|------|----------------|-------------|
+| 前端 | `#e8f5e8` | `#2e7d32` |
+| 后端 | `#e3f2fd` | `#1976d2` |
+| 数据库 | `#fff3e0` | `#f57c00` |
+| 外部服务 | `#fce4ec` | `#c2185b` |
+| 缓存 | `#ffebee` | `#d32f2f` |
+| 消息队列 | `#f3e5f5` | `#7b1fa2` |
 
-**工作流**：
-1. 规划图表结构
-2. 用描述性名称生成所有元素 ID
-3. 调用 `batch_create_elements` 并传入预设 ID
-4. 直接设置所有绑定关系
+### 8.2 思维导图配色（鲜艳）
 
-**示例**：
-```json
-batch_create_elements({
-  elements: [
-    {
-      "id": "api-server-main",      // ← 有意义的预设 ID
-      "type": "rectangle",
-      "boundElements": [
-        {"id": "text-api-label", "type": "text"}  // ← 可以立即引用
-      ]
-    },
-    {
-      "id": "text-api-label",       // ← 有意义的预设 ID
-      "type": "text",
-      "containerId": "api-server-main"  // ← 关系立即建立
-    }
-  ]
-})
-```
+| 节点类型 | backgroundColor | strokeColor |
+|---------|----------------|-------------|
+| 中心 | `#a5d8ff` | `#1971c2` |
+| 分支1 | `#d0bfff` | `#5f3dc4` |
+| 分支2 | `#b2f2bb` | `#2f9e44` |
+| 分支3 | `#ffd8a8` | `#e67700` |
+| 分支4 | `#ffc9c9` | `#c92a2a` |
 
-### 系统生成 ID 模式
+### 8.3 流程图配色（专业）
 
-**何时使用**：简单场景，不需要预先建立关系。
+| 元素类型 | backgroundColor | strokeColor |
+|---------|----------------|-------------|
+| 开始/结束 | `#e9ecef` | `#495057` |
+| 处理 | `#e3f2fd` | `#1976d2` |
+| 判断 | `#fff3e0` | `#f57c00` |
+| 数据 | `#f3e5f5` | `#7b1fa2` |
 
-**工作流**：
-1. 调用 `create_element` 不传 `id`
-2. 从响应中提取生成的 ID
-3. 存储 ID 以备后用
-4. 使用 `update_element` 建立关系
+## 9. 最佳实践总结
 
-## 常用配色方案
-
-### 架构图
-```json
-{
-  "前端": { "bg": "#e8f5e8", "stroke": "#2e7d32" },
-  "后端": { "bg": "#e3f2fd", "stroke": "#1976d2" },
-  "数据库": { "bg": "#fff3e0", "stroke": "#f57c00" },
-  "外部服务": { "bg": "#fce4ec", "stroke": "#c2185b" },
-  "缓存": { "bg": "#ffebee", "stroke": "#d32f2f" },
-  "消息队列": { "bg": "#f3e5f5", "stroke": "#7b1fa2" }
-}
-```
-
-### 思维导图（鲜艳）
-```json
-{
-  "中心": { "bg": "#a5d8ff", "stroke": "#1971c2" },
-  "分支1": { "bg": "#d0bfff", "stroke": "#5f3dc4" },
-  "分支2": { "bg": "#b2f2bb", "stroke": "#2f9e44" },
-  "分支3": { "bg": "#ffd8a8", "stroke": "#e67700" },
-  "分支4": { "bg": "#ffc9c9", "stroke": "#c92a2a" }
-}
-```
-
-### 流程图（专业）
-```json
-{
-  "开始结束": { "bg": "#e9ecef", "stroke": "#495057" },
-  "处理": { "bg": "#e3f2fd", "stroke": "#1976d2" },
-  "判断": { "bg": "#fff3e0", "stroke": "#f57c00" },
-  "数据": { "bg": "#f3e5f5", "stroke": "#7b1fa2" }
-}
-```
-
-## 最佳实践总结
-
-1. **复杂图表始终使用预设 ID** - 实现一次性创建完整关系
-2. **建立双向绑定** - 两个元素必须互相引用
-3. **精确计算文本尺寸** - 使用公式计算容器文本
-4. **预先规划布局** - 计算位置避免重叠（间距 80-150px）
-5. **明确指定箭头 points** - 对于肘形箭头尤其关键（需要多个转折点）
-6. **使用一致的配色方案** - 2-3 种颜色用于分类
-7. **开始前清空画布** - 先查询再逐个删除所有元素
-8. **用框架组织** - 用于复杂的多区域图表
+| 序号 | 实践 | 说明 |
+|------|------|------|
+| 1 | **复杂图表始终使用预设 ID** | 实现一次性创建完整关系 |
+| 2 | **建立双向绑定** | 两个元素必须互相引用（容器↔文本、箭头↔元素） |
+| 3 | **精确计算文本尺寸** | 使用公式计算容器文本的位置和尺寸 |
+| 4 | **预先规划布局** | 计算位置避免重叠（间距 80-150px） |
+| 5 | **明确指定箭头 points** | 对于肘形箭头尤其关键（需要多个转折点） |
+| 6 | **使用一致的配色方案** | 2-3 种颜色用于分类，建立视觉层级 |
+| 7 | **开始前清空画布** | 先查询再逐个删除所有元素 |
+| 8 | **用框架组织** | 用于复杂的多区域图表，实现逻辑分组 |

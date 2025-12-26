@@ -70,26 +70,6 @@ description: 此技能用于在 Excalidraw 中创建、编辑或管理图表。�
 5. 分组管理（完成的模块立即分组，保持结构清晰）
 6. 持续美观（确保每个阶段的图表都是可展示的完整状态）
 
-## ID 管理策略
-
-推荐使用**预设 ID 模式**以获得最佳效率：
-
-| 模式 | 方式 | ID格式 | 适用场景 |
-|------|------|--------|---------|
-| **预设ID（推荐）** | 调用方预先生成ID并传递 | 有意义的命名，如 `rect_main`, `text_title` | 复杂图表、批量创建、需要直接建立绑定关系 |
-| **系统自动生成** | 不传递ID，从返回值获取 | 随机字符串 | 简单场景、不确定ID时 |
-
-**预设ID工作流**：
-1. 规划图表结构，生成所有元素ID
-2. 调用 `batch_create_elements` 传递预设ID
-3. 创建时直接设置绑定关系（boundElements, containerId等）
-
-**ID命名规范**：使用描述性前缀，如 `container_main`、`text_title`、`arrow_flow1`
-
-## 元素骨架概念
-
-**重要理念**：通过创建**元素骨架（`ExcalidrawElementSkeleton`）**对象来添加元素，而非手动构建完整的 `ExcalidrawElement`。`ExcalidrawElementSkeleton` 是一个简化的、专为编程创建而设计的对象。Excalidraw 前端会自动补全版本号、随机种子等属性。
-
 ## 快速开始工作流
 
 ### 1. 清空画布（始终从这里开始）
