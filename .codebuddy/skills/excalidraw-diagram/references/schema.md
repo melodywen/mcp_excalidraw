@@ -59,44 +59,18 @@
 batch_create_elements({
   elements: [
     {
-      // ======== 必填字段 ========
-      "id": "api-server-main",           // 预设 ID（推荐）
-      "type": "rectangle",               // ✅ 必填：元素类型
-      "x": 300,                          // ✅ 必填：X 坐标
-      "y": 200,                          // ✅ 必填：Y 坐标
-      "width": 200,                      // ✅ 必填：宽度
-      "height": 120,                     // ✅ 必填：高度
-      
-      // ======== 可选样式 ========
-      "backgroundColor": "#e3fafc",      // 背景色
-      "strokeColor": "#0c8599",          // 边框色
-      "strokeWidth": 2,                  // 边框宽度
-      "fillStyle": "solid",              // 填充样式
-      "roundness": {"type": 3, "value": 8},  // 圆角
-      
-      // ======== 必需绑定 ========
-      "boundElements": [                 // 绑定的元素
-        {"id": "text-api-label", "type": "text"}
-      ]
+      "id": "api-server-main", "type": "rectangle",
+      "x": 300, "y": 200, "width": 200, "height": 120,
+      "backgroundColor": "#e3fafc", "strokeColor": "#0c8599",
+      "strokeWidth": 2, "fillStyle": "solid", "roundness": {"type": 3, "value": 8},
+      "boundElements": [{"id": "text-api-label", "type": "text"}]
     },
     {
-      // ======== 必填字段 ========
-      "id": "text-api-label",            // 预设 ID（推荐）
-      "type": "text",                    // ✅ 必填：元素类型
-      "x": 310,                          // ✅ 必填：X 坐标
-      "y": 235,                          // ✅ 必填：Y 坐标
-      "width": 180,                      // ✅ 必填：宽度（文本也要！）
-      "height": 50,                      // ✅ 必填：高度（文本也要！）
-      "text": "API Server",              // ✅ 必填：文本内容
-      
-      // ======== 可选样式 ========
-      "fontSize": 28,                    // 字体大小
-      "fontFamily": 1,                   // 字体族
-      "textAlign": "center",             // 水平对齐
-      "verticalAlign": "middle",         // 垂直对齐
-      
-      // ======== 必需绑定 ========
-      "containerId": "api-server-main"   // 容器 ID（绑定关系）
+      "id": "text-api-label", "type": "text",
+      "x": 310, "y": 235, "width": 180, "height": 50,
+      "text": "API Server", "fontSize": 28, "fontFamily": 1,
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "api-server-main"
     }
   ]
 })
@@ -133,40 +107,50 @@ batch_create_elements({
 ### 3.1 示例：带文本的矩形
 
 ```json
-batch_create_elements({
-  "elements": [
-    {
-      "id": "rect-container",
-      "type": "rectangle",
-      "x": 100,
-      "y": 100,
-      "width": 200,
-      "height": 100,
-      "backgroundColor": "#e3f2fd",
-      "strokeColor": "#1976d2",
-      "fillStyle": "solid",
-      "roundness": {"type": 3, "value": 12},
-      "boundElements": [
-        {"id": "text-label", "type": "text"}
-      ]
-    },
-    {
-      "id": "text-label",
-      "type": "text",
-      "x": 110,
-      "y": 125,
-      "width": 180,
-      "height": 50,
-      "text": "API 服务器\n(Node.js)",
-      "containerId": "rect-container",
-      "fontSize": 20,
-      "fontFamily": 1,
-      "textAlign": "center",
-      "verticalAlign": "middle"
-    }
-  ]
-})
+batch_create_elements({"elements": [{"id": "rect-container", "type": "rectangle", "x": 100, "y": 100, "width": 200, "height": 100, "backgroundColor": "#e3f2fd", "strokeColor": "#1976d2", "fillStyle": "solid", "roundness": {"type": 3, "value": 12}, "boundElements": [{"id": "text-label", "type": "text"}]}, {"id": "text-label", "type": "text", "x": 110, "y": 125, "width": 180, "height": 50, "text": "API 服务器\n(Node.js)", "fontSize": 20, "fontFamily": 1, "textAlign": "center", "verticalAlign": "middle", "containerId": "rect-container"}]})
 ```
+
+### 3.2 Roundness 圆角效果示例
+
+展示矩形的所有圆角类型（参考 2.2 节的 Roundness 属性说明）：
+
+#### 3.2.1 无圆角 (roundness: null)
+
+```json
+batch_create_elements({"elements": [{"id": "rect-null", "type": "rectangle", "x": 50, "y": 50, "width": 180, "height": 120, "backgroundColor": "#ffebee", "strokeColor": "#d32f2f", "fillStyle": "solid", "strokeWidth": 2, "roundness": null, "boundElements": [{"id": "text-null", "type": "text"}]}, {"id": "text-null", "type": "text", "x": 60, "y": 82, "width": 160, "height": 56, "text": "roundness: null\n尖角", "fontSize": 18, "fontFamily": 1, "textAlign": "center", "verticalAlign": "middle", "containerId": "rect-null"}]})
+```
+
+#### 3.2.2 自适应圆角 (type: 1 和 type: 2)
+
+```json
+batch_create_elements({"elements": [{"id": "rect-type1", "type": "rectangle", "x": 280, "y": 50, "width": 180, "height": 120, "backgroundColor": "#e3f2fd", "strokeColor": "#1976d2", "fillStyle": "solid", "strokeWidth": 2, "roundness": {"type": 1}, "boundElements": [{"id": "text-type1", "type": "text"}]}, {"id": "text-type1", "type": "text", "x": 290, "y": 82, "width": 160, "height": 56, "text": "roundness: type 1\n自适应圆角", "fontSize": 18, "fontFamily": 1, "textAlign": "center", "verticalAlign": "middle", "containerId": "rect-type1"}]})
+```
+
+```json
+batch_create_elements({"elements": [{"id": "rect-type2", "type": "rectangle", "x": 510, "y": 50, "width": 180, "height": 120, "backgroundColor": "#f3e5f5", "strokeColor": "#7b1fa2", "fillStyle": "solid", "strokeWidth": 2, "roundness": {"type": 2}, "boundElements": [{"id": "text-type2", "type": "text"}]}, {"id": "text-type2", "type": "text", "x": 520, "y": 82, "width": 160, "height": 56, "text": "roundness: type 2\n自适应圆角", "fontSize": 18, "fontFamily": 1, "textAlign": "center", "verticalAlign": "middle", "containerId": "rect-type2"}]})
+```
+
+#### 3.2.3 指定圆角半径 (type: 3, value: N)
+
+**推荐使用**：可精确控制圆角大小
+
+```json
+batch_create_elements({"elements": [{"id": "rect-type3-small", "type": "rectangle", "x": 50, "y": 220, "width": 180, "height": 120, "backgroundColor": "#fff3e0", "strokeColor": "#f57c00", "fillStyle": "solid", "strokeWidth": 2, "roundness": {"type": 3, "value": 8}, "boundElements": [{"id": "text-type3-small", "type": "text"}]}, {"id": "text-type3-small", "type": "text", "x": 60, "y": 252, "width": 160, "height": 56, "text": "roundness: type 3\nvalue: 8px", "fontSize": 18, "fontFamily": 1, "textAlign": "center", "verticalAlign": "middle", "containerId": "rect-type3-small"}]})
+```
+
+```json
+batch_create_elements({"elements": [{"id": "rect-type3-medium", "type": "rectangle", "x": 280, "y": 220, "width": 180, "height": 120, "backgroundColor": "#e8f5e9", "strokeColor": "#2e7d32", "fillStyle": "solid", "strokeWidth": 2, "roundness": {"type": 3, "value": 16}, "boundElements": [{"id": "text-type3-medium", "type": "text"}]}, {"id": "text-type3-medium", "type": "text", "x": 290, "y": 252, "width": 160, "height": 56, "text": "roundness: type 3\nvalue: 16px", "fontSize": 18, "fontFamily": 1, "textAlign": "center", "verticalAlign": "middle", "containerId": "rect-type3-medium"}]})
+```
+
+```json
+batch_create_elements({"elements": [{"id": "rect-type3-large", "type": "rectangle", "x": 510, "y": 220, "width": 180, "height": 120, "backgroundColor": "#fce4ec", "strokeColor": "#c2185b", "fillStyle": "solid", "strokeWidth": 2, "roundness": {"type": 3, "value": 32}, "boundElements": [{"id": "text-type3-large", "type": "text"}]}, {"id": "text-type3-large", "type": "text", "x": 520, "y": 252, "width": 160, "height": 56, "text": "roundness: type 3\nvalue: 32px", "fontSize": 18, "fontFamily": 1, "textAlign": "center", "verticalAlign": "middle", "containerId": "rect-type3-large"}]})
+```
+
+**使用建议**：
+- 普通 UI 元素：推荐 `{"type": 3, "value": 8}` 或 `{"type": 3, "value": 12}`
+- 卡片/面板：推荐 `{"type": 3, "value": 16}`
+- 按钮样式：推荐 `{"type": 3, "value": 24}` 或 `{"type": 3, "value": 32}`
+- 尖角效果：使用 `null`
 
 ## 4. 文本元素（text）
 
@@ -207,42 +191,80 @@ batch_create_elements({
 | 2行 | 18 | 1.25 | 2 × 18 × 1.25 | **45** |
 | 3行 | 18 | 1.25 | 3 × 18 × 1.25 | **67.5** → 68 |
 
-### 4.3 示例：200x80 容器中的单行文本
+#### 4.2.1 示例：200x80 容器中的单行文本
 
 ```json
-{
-  "type": "text",
-  "text": "容器标题",
-  "x": 110,              // 100 + 10
-  "y": 127,              // 100 + (80 - 25)/2
-  "width": 180,          // 200 - 20
-  "height": 25,          // 1 × 20 × 1.25
-  "containerId": "rect-1",
-  "fontSize": 20,
-  "fontFamily": 1,
-  "textAlign": "center",
-  "verticalAlign": "middle",
-  "lineHeight": 1.25
-}
+batch_create_elements({
+  "elements": [
+    {
+      "id": "rect-1",
+      "type": "rectangle",
+      "x": 100,
+      "y": 100,
+      "width": 200,
+      "height": 80,
+      "backgroundColor": "#e3f2fd",
+      "strokeColor": "#1976d2",
+      "fillStyle": "solid",
+      "boundElements": [
+        {"id": "text-1", "type": "text"}
+      ]
+    },
+    {
+      "id": "text-1",
+      "type": "text",
+      "text": "容器标题",
+      "x": 110,              // 100 + 10
+      "y": 127,              // 100 + (80 - 25)/2
+      "width": 180,          // 200 - 20
+      "height": 25,          // 1 × 20 × 1.25
+      "containerId": "rect-1",
+      "fontSize": 20,
+      "fontFamily": 1,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "lineHeight": 1.25
+    }
+  ]
+})
 ```
 
-### 4.4 示例：200x120 容器中的三行文本
+#### 4.2.2 示例：200x120 容器中的三行文本
 
 ```json
-{
-  "type": "text",
-  "text": "API 服务器\n(Node.js)\n端口: 3000",
-  "x": 110,              // 100 + 10
-  "y": 122,              // 100 + (120 - 75)/2
-  "width": 180,          // 200 - 20
-  "height": 75,          // 3 × 20 × 1.25
-  "containerId": "rect-2",
-  "fontSize": 20,
-  "fontFamily": 1,
-  "textAlign": "center",
-  "verticalAlign": "middle",
-  "lineHeight": 1.25
-}
+batch_create_elements({
+  "elements": [
+    {
+      "id": "rect-2",
+      "type": "rectangle",
+      "x": 100,
+      "y": 100,
+      "width": 200,
+      "height": 120,
+      "backgroundColor": "#fff3e0",
+      "strokeColor": "#f57c00",
+      "fillStyle": "solid",
+      "boundElements": [
+        {"id": "text-2", "type": "text"}
+      ]
+    },
+    {
+      "id": "text-2",
+      "type": "text",
+      "text": "API 服务器\n(Node.js)\n端口: 3000",
+      "x": 110,              // 100 + 10
+      "y": 122,              // 100 + (120 - 75)/2
+      "width": 180,          // 200 - 20
+      "height": 75,          // 3 × 20 × 1.25
+      "containerId": "rect-2",
+      "fontSize": 20,
+      "fontFamily": 1,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "lineHeight": 1.25
+    }
+  ]
+})
 ```
 
 ## 5. 箭头和线条元素（arrow、line）
