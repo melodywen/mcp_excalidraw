@@ -14,10 +14,8 @@
 |------|------|------|--------|------|
 | `id` | string | **可选，复杂图表推荐设置**。唯一标识符。不提供则系统自动生成。 | 自动生成 | `"elem_abc123"` |
 | `type` | string | **必需**。元素类型：`rectangle`（矩形）、`ellipse`（椭圆）、`diamond`（菱形）、`arrow`（箭头）、`text`（文本）、`line`（线条）、`frame`（框架）、`freedraw`（自由绘制） | - | `"rectangle"` |
-| `x` | number | **必需**。元素左上角在画布上的 X 坐标 | - | `150` |
-| `y` | number | **必需**。元素左上角在画布上的 Y 坐标 | - | `300` |
-| `width` | number | 元素宽度。对于 `autoResize=true` 的 `text` 元素，强制为 0 | `0` | `200` |
-| `height` | number | 元素高度。对于 `autoResize=true` 的 `text` 元素，强制为 0 | `0` | `80` |
+| `x, y` | number | **必填**。元素左上角的画布坐标。 | - | `150`, `300` |
+| `width, height` | number | **必填**。元素的尺寸。 | - | `200`, `80` |
 | `angle` | number | 旋转角度（弧度） | `0` | `1.57`（90°） |
 | `strokeColor` | string | 边框颜色（十六进制） | `"#1e1e1e"` | `"#1976d2"` |
 | `backgroundColor` | string | 填充颜色（十六进制） | `"transparent"` | `"#e3f2fd"` |
@@ -61,16 +59,44 @@
 batch_create_elements({
   elements: [
     {
-      "id": "api-server-main",      // ← 有意义的预设 ID
-      "type": "rectangle",
-      "boundElements": [
-        {"id": "text-api-label", "type": "text"}  // ← 可以立即引用
+      // ======== 必填字段 ========
+      "id": "api-server-main",           // 预设 ID（推荐）
+      "type": "rectangle",               // ✅ 必填：元素类型
+      "x": 300,                          // ✅ 必填：X 坐标
+      "y": 200,                          // ✅ 必填：Y 坐标
+      "width": 200,                      // ✅ 必填：宽度
+      "height": 120,                     // ✅ 必填：高度
+      
+      // ======== 可选样式 ========
+      "backgroundColor": "#e3fafc",      // 背景色
+      "strokeColor": "#0c8599",          // 边框色
+      "strokeWidth": 2,                  // 边框宽度
+      "fillStyle": "solid",              // 填充样式
+      "roundness": {"type": 3, "value": 8},  // 圆角
+      
+      // ======== 必需绑定 ========
+      "boundElements": [                 // 绑定的元素
+        {"id": "text-api-label", "type": "text"}
       ]
     },
     {
-      "id": "text-api-label",       // ← 有意义的预设 ID
-      "type": "text",
-      "containerId": "api-server-main"  // ← 关系立即建立
+      // ======== 必填字段 ========
+      "id": "text-api-label",            // 预设 ID（推荐）
+      "type": "text",                    // ✅ 必填：元素类型
+      "x": 310,                          // ✅ 必填：X 坐标
+      "y": 235,                          // ✅ 必填：Y 坐标
+      "width": 180,                      // ✅ 必填：宽度（文本也要！）
+      "height": 50,                      // ✅ 必填：高度（文本也要！）
+      "text": "API Server",              // ✅ 必填：文本内容
+      
+      // ======== 可选样式 ========
+      "fontSize": 28,                    // 字体大小
+      "fontFamily": 1,                   // 字体族
+      "textAlign": "center",             // 水平对齐
+      "verticalAlign": "middle",         // 垂直对齐
+      
+      // ======== 必需绑定 ========
+      "containerId": "api-server-main"   // 容器 ID（绑定关系）
     }
   ]
 })
@@ -107,78 +133,44 @@ batch_create_elements({
 ### 3.1 示例：带文本的矩形
 
 ```json
-[
-  {
-    "id": "rect-container",
-    "type": "rectangle",
-    "x": 100,
-    "y": 100,
-    "width": 200,
-    "height": 100,
-    "backgroundColor": "#e3f2fd",
-    "strokeColor": "#1976d2",
-    "fillStyle": "solid",
-    "roundness": {"type": 3, "value": 12},
-    "boundElements": [
-      {"id": "text-label", "type": "text"}
-    ]
-  },
-  {
-    "id": "text-label",
-    "type": "text",
-    "x": 110,
-    "y": 125,
-    "width": 180,
-    "height": 50,
-    "text": "API 服务器\n(Node.js)",
-    "containerId": "rect-container",
-    "fontSize": 20,
-    "fontFamily": 1,
-    "textAlign": "center",
-    "verticalAlign": "middle"
-  }
-]
+batch_create_elements({
+  "elements": [
+    {
+      "id": "rect-container",
+      "type": "rectangle",
+      "x": 100,
+      "y": 100,
+      "width": 200,
+      "height": 100,
+      "backgroundColor": "#e3f2fd",
+      "strokeColor": "#1976d2",
+      "fillStyle": "solid",
+      "roundness": {"type": 3, "value": 12},
+      "boundElements": [
+        {"id": "text-label", "type": "text"}
+      ]
+    },
+    {
+      "id": "text-label",
+      "type": "text",
+      "x": 110,
+      "y": 125,
+      "width": 180,
+      "height": 50,
+      "text": "API 服务器\n(Node.js)",
+      "containerId": "rect-container",
+      "fontSize": 20,
+      "fontFamily": 1,
+      "textAlign": "center",
+      "verticalAlign": "middle"
+    }
+  ]
+})
 ```
 
-## 4. 框架元素（frame）
+## 4. 文本元素（text）
 
-**用途**：将画布组织为命名区域，类似于幻灯片或章节。
-
-### 4.1 框架专有属性
-
-| 属性 | 类型 | 描述 | 默认值 |
-|------|------|------|--------|
-| `name` | string | 框架名称/标题 | `""` |
-| `children` | string[] | 框架内元素的 ID（自动管理，无需手动设置） | `[]` |
-
-### 4.2 示例
-
-```json
-{
-  "id": "frame-backend",
-  "type": "frame",
-  "x": 50,
-  "y": 400,
-  "width": 600,
-  "height": 300,
-  "name": "后端服务"
-}
-
-// 框架内的元素
-{
-  "id": "api-service",
-  "type": "rectangle",
-  "frameId": "frame-backend",  // ← 分配到框架
-  "x": 100,
-  "y": 450,
-  "width": 180,
-  "height": 80
-}
-```
-
-## 5. 文本元素（text）
-
-### 5.1 文本专有属性
+### 4.1 文本专有属性
 
 | 属性 | 类型 | 描述 | 默认值 |
 |------|------|------|--------|
@@ -192,7 +184,7 @@ batch_create_elements({
 | `autoResize` | boolean | 自动扩展文本框 | `true` |
 | `lineHeight` | number | 行高倍数 | `1.25` |
 
-### 5.2 ⚠️ 关键：容器中文本的定位
+### 4.2 ⚠️ 关键：容器中文本的定位
 
 当设置了 `containerId` 时，**必须手动指定 width 和 height**，否则渲染失败。
 
@@ -215,7 +207,7 @@ batch_create_elements({
 | 2行 | 18 | 1.25 | 2 × 18 × 1.25 | **45** |
 | 3行 | 18 | 1.25 | 3 × 18 × 1.25 | **67.5** → 68 |
 
-### 5.3 示例：200x80 容器中的单行文本
+### 4.3 示例：200x80 容器中的单行文本
 
 ```json
 {
@@ -234,7 +226,7 @@ batch_create_elements({
 }
 ```
 
-### 5.4 示例：200x120 容器中的三行文本
+### 4.4 示例：200x120 容器中的三行文本
 
 ```json
 {
@@ -253,9 +245,9 @@ batch_create_elements({
 }
 ```
 
-## 6. 箭头和线条元素（arrow、line）
+## 5. 箭头和线条元素（arrow、line）
 
-### 6.1 箭头/线条专有属性
+### 5.1 箭头/线条专有属性
 
 | 属性 | 类型 | 描述 | 默认值 |
 |------|------|------|--------|
@@ -267,7 +259,7 @@ batch_create_elements({
 | `startBinding` | object/null | 起点绑定的元素信息。详见 6.2 节 | `null` |
 | `endBinding` | object/null | 终点绑定的元素信息。详见 6.2 节 | `null` |
 
-### 6.2 绑定对象属性（Binding）
+### 5.2 绑定对象属性（Binding）
 
 | 属性 | 类型 | 描述 |
 |------|------|------|
@@ -275,7 +267,7 @@ batch_create_elements({
 | `focus` | number | 边缘位置（-1 到 1，0=中心） |
 | `gap` | number | 箭头与元素的像素间隙 |
 
-### 6.3 箭头类型对照表
+### 5.3 箭头类型对照表
 
 | 类型 | `roundness` | `elbowed` | 视觉效果 |
 |------|-------------|-----------|---------|
@@ -283,7 +275,7 @@ batch_create_elements({
 | 直线折线 | `null` | `false` | 尖角折线 |
 | 肘形箭头 | `null` | `true` | 90° 直角转折 |
 
-### 6.4 ⚠️ 关键：箭头 Points
+### 5.4 ⚠️ 关键：箭头 Points
 
 **必须指定 `points` 数组**。不能只依赖 `width`/`height`。
 
@@ -309,7 +301,7 @@ batch_create_elements({
 }
 ```
 
-### 6.5 示例：简单的水平箭头
+### 5.5 示例：简单的水平箭头
 
 ```json
 {
@@ -324,7 +316,7 @@ batch_create_elements({
 }
 ```
 
-### 6.6 示例：带绑定的肘形箭头
+### 5.6 示例：带绑定的肘形箭头
 
 ```json
 {
@@ -355,9 +347,9 @@ batch_create_elements({
 }
 ```
 
-## 7. 关系机制深度解析
+## 6. 关系机制深度解析
 
-### 7.1 容器中的文本（双向绑定）
+### 6.1 容器中的文本（双向绑定）
 
 **必需关系**：
 
@@ -382,7 +374,7 @@ batch_create_elements({
 }
 ```
 
-### 7.2 箭头绑定（双向绑定）
+### 6.2 箭头绑定（双向绑定）
 
 **必需关系**：
 
@@ -438,7 +430,7 @@ batch_create_elements({
 ]
 ```
 
-### 7.3 元素分组
+### 6.3 元素分组
 
 **方法 1：使用 MCP 工具**
 ```typescript
@@ -461,7 +453,7 @@ group_elements({
 
 **效果**：分组元素在 UI 中一起移动和变换。
 
-### 7.4 框架分配
+### 6.4 框架分配
 
 **方法**：设置元素的 `frameId` 为框架的 `id`
 
@@ -484,9 +476,9 @@ group_elements({
 }
 ```
 
-## 8. 常用配色方案
+## 7. 常用配色方案
 
-### 8.1 架构图配色
+### 7.1 架构图配色
 
 | 类别 | backgroundColor | strokeColor |
 |------|----------------|-------------|
@@ -497,7 +489,7 @@ group_elements({
 | 缓存 | `#ffebee` | `#d32f2f` |
 | 消息队列 | `#f3e5f5` | `#7b1fa2` |
 
-### 8.2 思维导图配色（鲜艳）
+### 7.2 思维导图配色（鲜艳）
 
 | 节点类型 | backgroundColor | strokeColor |
 |---------|----------------|-------------|
@@ -507,7 +499,7 @@ group_elements({
 | 分支3 | `#ffd8a8` | `#e67700` |
 | 分支4 | `#ffc9c9` | `#c92a2a` |
 
-### 8.3 流程图配色（专业）
+### 7.3 流程图配色（专业）
 
 | 元素类型 | backgroundColor | strokeColor |
 |---------|----------------|-------------|
@@ -516,7 +508,7 @@ group_elements({
 | 判断 | `#fff3e0` | `#f57c00` |
 | 数据 | `#f3e5f5` | `#7b1fa2` |
 
-## 9. 最佳实践总结
+## 8. 最佳实践总结
 
 | 序号 | 实践 | 说明 |
 |------|------|------|
@@ -528,3 +520,39 @@ group_elements({
 | 6 | **使用一致的配色方案** | 2-3 种颜色用于分类，建立视觉层级 |
 | 7 | **开始前清空画布** | 先查询再逐个删除所有元素 |
 | 8 | **用框架组织** | 用于复杂的多区域图表，实现逻辑分组 |
+
+## 9. 框架元素（frame）
+
+**用途**：将画布组织为命名区域，类似于幻灯片或章节。
+
+### 9.1 框架专有属性
+
+| 属性 | 类型 | 描述 | 默认值 |
+|------|------|------|--------|
+| `name` | string | 框架名称/标题 | `""` |
+| `children` | string[] | 框架内元素的 ID（自动管理，无需手动设置） | `[]` |
+
+### 9.2 示例
+
+```json
+{
+  "id": "frame-backend",
+  "type": "frame",
+  "x": 50,
+  "y": 400,
+  "width": 600,
+  "height": 300,
+  "name": "后端服务"
+}
+
+// 框架内的元素
+{
+  "id": "api-service",
+  "type": "rectangle",
+  "frameId": "frame-backend",  // ← 分配到框架
+  "x": 100,
+  "y": 450,
+  "width": 180,
+  "height": 80
+}
+```
