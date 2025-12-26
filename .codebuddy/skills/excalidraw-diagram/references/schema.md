@@ -251,6 +251,45 @@ batch_create_elements({"elements": [
 | `focus` | number | 边缘位置（-1 到 1，0=中心） |
 | `gap` | number | 箭头与元素的像素间隙 |
 
+**Binding 对象示例**：
+```json
+{"elementId": "rect-target", "focus": 0, "gap": 5}
+```
+
+**focus 参数说明**：
+- `0`：箭头指向元素中心
+- `-1` 到 `1`：沿边缘的位置（-1=左/上边缘，1=右/下边缘）
+- `gap`：箭头端点与元素边界的像素距离
+
+#### 5.2.1 示例：带 Binding 的箭头连接两个矩形
+
+```json
+batch_create_elements({"elements": [
+  {"id": "rect-a", "type": "rectangle", "x": 100, "y": 100,
+   "width": 150, "height": 80, "backgroundColor": "#e3f2fd", "strokeColor": "#1976d2",
+   "fillStyle": "solid", "strokeWidth": 2, "boundElements": [{"id": "arrow-1", "type": "arrow"}, {"id": "text-a", "type": "text"}]},
+  {"id": "text-a", "type": "text", "text": "起点", "x": 110,
+   "y": 122, "width": 130, "height": 25, "containerId": "rect-a",
+   "fontSize": 20, "fontFamily": 1, "textAlign": "center", "verticalAlign": "middle"},
+  {"id": "rect-b", "type": "rectangle", "x": 400, "y": 100,
+   "width": 150, "height": 80, "backgroundColor": "#fff3e0", "strokeColor": "#f57c00",
+   "fillStyle": "solid", "strokeWidth": 2, "boundElements": [{"id": "arrow-1", "type": "arrow"}, {"id": "text-b", "type": "text"}]},
+  {"id": "text-b", "type": "text", "text": "终点", "x": 410,
+   "y": 122, "width": 130, "height": 25, "containerId": "rect-b",
+   "fontSize": 20, "fontFamily": 1, "textAlign": "center", "verticalAlign": "middle"},
+  {"id": "arrow-1", "type": "arrow", "x": 250, "y": 140,
+   "width": 150, "height": 0, "points": [[0, 0], [150, 0]], "strokeColor": "#d32f2f",
+   "strokeWidth": 2, "startBinding": {"elementId": "rect-a", "focus": 0, "gap": 5}, "endBinding": {"elementId": "rect-b", "focus": 0, "gap": 5}}
+]})
+```
+
+**说明**：
+- 两个矩形分别位于 (100, 100) 和 (400, 100)
+- 箭头使用 `startBinding` 和 `endBinding` 绑定到两个矩形
+- `focus: 0` 表示箭头指向矩形中心
+- `gap: 5` 表示箭头与矩形边缘保持 5px 间距
+- 双向绑定：矩形的 `boundElements` 也包含箭头 ID
+
 ### 5.3 箭头类型对照表
 
 | 类型 | `roundness` | `elbowed` | 视觉效果 |
