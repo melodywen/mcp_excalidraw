@@ -194,78 +194,40 @@ batch_create_elements({"elements": [{"id": "rect-type3-large", "type": "rectangl
 #### 4.2.1 示例：200x80 容器中的单行文本
 
 ```json
-batch_create_elements({
-  "elements": [
-    {
-      "id": "rect-1",
-      "type": "rectangle",
-      "x": 100,
-      "y": 100,
-      "width": 200,
-      "height": 80,
-      "backgroundColor": "#e3f2fd",
-      "strokeColor": "#1976d2",
-      "fillStyle": "solid",
-      "boundElements": [
-        {"id": "text-1", "type": "text"}
-      ]
-    },
-    {
-      "id": "text-1",
-      "type": "text",
-      "text": "容器标题",
-      "x": 110,              // 100 + 10
-      "y": 127,              // 100 + (80 - 25)/2
-      "width": 180,          // 200 - 20
-      "height": 25,          // 1 × 20 × 1.25
-      "containerId": "rect-1",
-      "fontSize": 20,
-      "fontFamily": 1,
-      "textAlign": "center",
-      "verticalAlign": "middle",
-      "lineHeight": 1.25
-    }
-  ]
-})
+batch_create_elements({"elements": [
+  {"id": "rect-1", "type": "rectangle", "x": 100, "y": 100,
+   "width": 200, "height": 80, "backgroundColor": "#e3f2fd", "strokeColor": "#1976d2",
+   "fillStyle": "solid", "boundElements": [{"id": "text-1", "type": "text"}]},
+  {"id": "text-1", "type": "text", "text": "容器标题", "x": 110,
+   "y": 127, "width": 180, "height": 25, "containerId": "rect-1",
+   "fontSize": 20, "fontFamily": 1, "textAlign": "center", "verticalAlign": "middle", "lineHeight": 1.25}
+]})
 ```
+
+**计算说明**：
+- text.x = 100 + 10 = 110
+- text.y = 100 + (80 - 25)/2 = 127
+- text.width = 200 - 20 = 180
+- text.height = 1 × 20 × 1.25 = 25
 
 #### 4.2.2 示例：200x120 容器中的三行文本
 
 ```json
-batch_create_elements({
-  "elements": [
-    {
-      "id": "rect-2",
-      "type": "rectangle",
-      "x": 100,
-      "y": 100,
-      "width": 200,
-      "height": 120,
-      "backgroundColor": "#fff3e0",
-      "strokeColor": "#f57c00",
-      "fillStyle": "solid",
-      "boundElements": [
-        {"id": "text-2", "type": "text"}
-      ]
-    },
-    {
-      "id": "text-2",
-      "type": "text",
-      "text": "API 服务器\n(Node.js)\n端口: 3000",
-      "x": 110,              // 100 + 10
-      "y": 122,              // 100 + (120 - 75)/2
-      "width": 180,          // 200 - 20
-      "height": 75,          // 3 × 20 × 1.25
-      "containerId": "rect-2",
-      "fontSize": 20,
-      "fontFamily": 1,
-      "textAlign": "center",
-      "verticalAlign": "middle",
-      "lineHeight": 1.25
-    }
-  ]
-})
+batch_create_elements({"elements": [
+  {"id": "rect-2", "type": "rectangle", "x": 100, "y": 100,
+   "width": 200, "height": 120, "backgroundColor": "#fff3e0", "strokeColor": "#f57c00",
+   "fillStyle": "solid", "boundElements": [{"id": "text-2", "type": "text"}]},
+  {"id": "text-2", "type": "text", "text": "API 服务器\n(Node.js)\n端口: 3000", "x": 110,
+   "y": 122, "width": 180, "height": 75, "containerId": "rect-2",
+   "fontSize": 20, "fontFamily": 1, "textAlign": "center", "verticalAlign": "middle", "lineHeight": 1.25}
+]})
 ```
+
+**计算说明**：
+- text.x = 100 + 10 = 110
+- text.y = 100 + (120 - 75)/2 = 122
+- text.width = 200 - 20 = 180
+- text.height = 3 × 20 × 1.25 = 75
 
 ## 5. 箭头和线条元素（arrow、line）
 
