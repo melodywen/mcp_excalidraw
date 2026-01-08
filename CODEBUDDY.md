@@ -1,241 +1,249 @@
-# CODEBUDDY.md This file provides guidance to CodeBuddy Code when working with code in this repository.
+# CODEBUDDY.md 
+本文件为 CodeBuddy Code 在此代码仓库中工作时提供指导。
 
-## Project Overview
+## 项目概览
 
-This is **MCP Excalidraw Server** - a TypeScript-based system that integrates Excalidraw's drawing capabilities with the Model Context Protocol (MCP), enabling AI agents to create and manipulate diagrams in real-time on a live canvas.
+这是 **MCP Excalidraw 服务器** - 一个基于 TypeScript 的系统，将 Excalidraw 的绘图能力与模型上下文协议 (MCP) 集成，使 AI 代理能够在实时画布上创建和操作图表。
 
-### Two Independent Components
+### 两个独立组件
 
-The system consists of two separate processes:
+系统由两个独立的进程组成：
 
-1. **Canvas Server** (`src/server.ts` → `dist/server.js`) - Provides the live Excalidraw web interface with WebSocket synchronization
-2. **MCP Server** (`src/index.ts` → `dist/index.js`) - Implements MCP protocol for AI agent integration
+1. **Canvas 服务器** (`src/server.ts` → `dist/server.js`) - 提供实时 Excalidraw Web 界面和 WebSocket 同步
+2. **MCP 服务器** (`src/index.ts` → `dist/index.js`) - 实现 MCP 协议以集成 AI 代理
 
-Both components are fully TypeScript-based and compile to ES modules in the `dist/` directory.
+两个组件都完全基于 TypeScript，编译到 `dist/` 目录为 ES 模块。
 
-## Essential Commands
+## 基本命令
 
-### Development
+### 开发
 
 ```bash
-# Build entire project (frontend + backend)
+# 构建整个项目（前端 + 后端）
 npm run build
 
-# Build only frontend (React + Vite)
+# 仅构建前端（React + Vite）
 npm run build:frontend
 
-# Build only TypeScript backend
+# 仅构建 TypeScript 后端
 npm run build:server
 
-# Type checking without compilation
+# 类型检查（不编译）
 npm run type-check
 
-# Development mode (watch mode + Vite dev server)
+# 开发模式（监视模式 + Vite 开发服务器）
 npm run dev
 ```
 
-### Running Servers
+### 运行服务器
 
 ```bash
-# Start Canvas Server (port 3000)
+# 启动 Canvas 服务器（端口 3000）
 npm run canvas
 
-# Start MCP Server (stdio protocol)
+# 启动 MCP 服务器（stdio 协议）
 npm start
 
-# Production mode (build + start canvas)
+# 生产模式（构建 + 启动 canvas）
 npm run production
 ```
 
 ### Docker
 
 ```bash
-# Build Canvas Server image
+# 构建 Canvas 服务器镜像
 docker build -f Dockerfile.canvas -t mcp-excalidraw-canvas .
 
-# Build MCP Server image
+# 构建 MCP 服务器镜像
 docker build -f Dockerfile -t mcp-excalidraw .
 
-# Run Canvas Server
+# 运行 Canvas 服务器
 docker run -d -p 3000:3000 --name mcp-excalidraw-canvas mcp-excalidraw-canvas
 
-# Run MCP Server (requires --network host and -i flag)
+# 运行 MCP 服务器（需要 --network host 和 -i 标志）
 docker run -i --rm --network host \
   -e EXPRESS_SERVER_URL=http://localhost:3000 \
   -e ENABLE_CANVAS_SYNC=true \
   mcp-excalidraw
 ```
 
-## Architecture
+## 架构
 
-### Source Structure
+### 源代码结构
 
 ```
 src/
-├── index.ts      # MCP Server - Implements MCP protocol
-├── server.ts     # Canvas Server - Express + WebSocket server
-├── types.ts      # Comprehensive TypeScript type definitions
+├── index.ts      # MCP 服务器 - 实现 MCP 协议
+├── server.ts     # Canvas 服务器 - Express + WebSocket 服务器
+├── types.ts      # 全面的 TypeScript 类型定义
 └── utils/
-    └── logger.ts # Winston-based logging utility
+    └── logger.ts # 基于 Winston 的日志工具
 ```
 
-### Build Output Structure
+### 构建输出结构
 
 ```
 dist/
-├── index.js           # Compiled MCP server
-├── server.js          # Compiled Canvas server
-├── types.js           # Compiled types
-├── *.d.ts            # TypeScript declaration files
-├── utils/            # Compiled utilities
-└── frontend/         # Built React app (from Vite)
+├── index.js           # 编译后的 MCP 服务器
+├── server.js          # 编译后的 Canvas 服务器
+├── types.js           # 编译后的类型
+├── *.d.ts            # TypeScript 声明文件
+├── utils/            # 编译后的工具
+└── frontend/         # 构建的 React 应用（来自 Vite）
 ```
 
-### Frontend Structure
+### 前端结构
 
 ```
 frontend/
 ├── src/
-│   ├── App.tsx       # Main React component
-│   └── main.tsx      # React entry point
-└── index.html        # HTML template
+│   ├── App.tsx       # 主 React 组件
+│   └── main.tsx      # React 入口点
+└── index.html        # HTML 模板
 ```
 
-## Key Technical Details
+## 关键技术细节
 
-### TypeScript Configuration
+### TypeScript 配置
 
-- **Target**: ES2022
-- **Module**: ESNext (ES modules, not CommonJS)
-- **Strict Mode**: Enabled with all strict flags
-- **Output**: `dist/` directory with declaration files
-- **Important**: This project uses ES modules (`"type": "module"` in package.json)
+- **目标**: ES2022
+- **模块**: ESNext（ES 模块，非 CommonJS）
+- **严格模式**: 启用所有严格标志
+- **输出**: `dist/` 目录，包含声明文件
+- **重要**: 此项目使用 ES 模块（package.json 中 `"type": "module"`）
 
-### Type System (`src/types.ts`)
+### 类型系统 (`src/types.ts`)
 
-The project defines comprehensive types for:
-- **ExcalidrawElement**: Base element interface with all properties
-- **ExcalidrawTextElement**: Text-specific element
-- **ExcalidrawArrowElement**: Arrow/line elements with points
-- **ExcalidrawFrameElement**: Frame container elements
-- **ServerElement**: Elements with server-side metadata
-- **WebSocket Messages**: Type-safe WebSocket communication
-- **API Responses**: Strongly typed REST API interfaces
+项目定义了全面的类型：
+- **ExcalidrawElement**: 包含所有属性的基础元素接口
+- **ExcalidrawTextElement**: 文本特定元素
+- **ExcalidrawArrowElement**: 带点的箭头/线条元素
+- **ExcalidrawFrameElement**: 框架容器元素
+- **ServerElement**: 带服务器端元数据的元素
+- **WebSocket Messages**: 类型安全的 WebSocket 通信
+- **API Responses**: 强类型 REST API 接口
 
-### Canvas Server (`src/server.ts`)
+### Canvas 服务器 (`src/server.ts`)
 
-**Technology Stack**:
-- Express.js with TypeScript
-- WebSocket (ws) for real-time sync
-- In-memory element storage
-- CORS enabled
+**技术栈**:
+- Express.js 配合 TypeScript
+- WebSocket (ws) 用于实时同步
+- 内存元素存储
+- 启用 CORS
 
-**Key Features**:
-- REST API endpoints for element CRUD
-- WebSocket broadcast to all connected clients
-- Serves built React frontend from `dist/index.html` and `dist/frontend/`
-- Health check endpoint at `/health`
+**关键特性**:
+- 元素 CRUD 的 REST API 端点
+- WebSocket 广播到所有连接的客户端
+- 从 `dist/index.html` 和 `dist/frontend/` 提供构建的 React 前端
+- `/health` 健康检查端点
 
-**Important**: The server serves TWO paths:
-1. `dist/index.html` - Canvas page
-2. `dist/frontend/` - Vite-built assets
+**重要**: 服务器提供两个路径：
+1. `dist/index.html` - Canvas 页面
+2. `dist/frontend/` - Vite 构建的资源
 
-### MCP Server (`src/index.ts`)
+### MCP 服务器 (`src/index.ts`)
 
-**Technology Stack**:
-- `@modelcontextprotocol/sdk` for MCP protocol
-- Zod for schema validation
-- HTTP client to communicate with Canvas Server
+**技术栈**:
+- `@modelcontextprotocol/sdk` 用于 MCP 协议
+- Zod 用于 schema 验证
+- HTTP 客户端与 Canvas 服务器通信
 
-**Communication**:
-- Uses stdio protocol (stdin/stdout)
-- Sends HTTP requests to Canvas Server when `ENABLE_CANVAS_SYNC=true`
-- Implements 15+ MCP tools for element manipulation
+**通信方式**:
+- 使用 stdio 协议（stdin/stdout）
+- 当 `ENABLE_CANVAS_SYNC=true` 时向 Canvas 服务器发送 HTTP 请求
+- 实现 13 个 MCP 工具用于元素操作
 
-**Tools Implemented**:
+**已实现的工具**:
 - `create_element`, `update_element`, `delete_element`
 - `query_elements`, `batch_create_elements`
 - `group_elements`, `ungroup_elements`
 - `align_elements`, `distribute_elements`
 - `lock_elements`, `unlock_elements`
 - `get_resource`
-- `create_from_mermaid` (Mermaid diagram conversion)
+- `create_from_mermaid`（Mermaid 图表转换）
 
-### Frontend (`frontend/src/App.tsx`)
+**重要元素属性说明**:
+- **opacity（透明度）**: 使用 **0-100** 的数值范围（而非 0-1）
+  - `100` = 完全不透明（默认值）
+  - `50` = 半透明
+  - `0` = 完全透明
+  - 注意：虽然 TypeScript 类型定义为 `number`，但 Excalidraw 实际使用百分比值（0-100）
 
-**Technology Stack**:
+### 前端 (`frontend/src/App.tsx`)
+
+**技术栈**:
 - React 18 + TypeScript (TSX)
-- Official `@excalidraw/excalidraw` package
-- WebSocket client for real-time updates
-- Vite for building
+- 官方 `@excalidraw/excalidraw` 包
+- WebSocket 客户端用于实时更新
+- Vite 用于构建
 
-**Key Features**:
-- Dual-path element loading (HTTP + WebSocket)
-- Auto-reconnection logic
-- Clean UI with connection status
-- Clear canvas button
-- Mermaid test button (development)
+**关键特性**:
+- 双路径元素加载（HTTP + WebSocket）
+- 自动重连逻辑
+- 简洁的连接状态 UI
+- 清空画布按钮
+- Mermaid 测试按钮（开发用）
 
-**WebSocket Protocol**:
+**WebSocket 协议**:
 ```typescript
-// Client receives
+// 客户端接收
 { type: 'init', elements: ExcalidrawElement[] }
 { type: 'update', element: ExcalidrawElement }
 { type: 'delete', id: string }
 { type: 'clear' }
 ```
 
-## Environment Variables
+## 环境变量
 
-| Variable | Default | Purpose |
+| 变量 | 默认值 | 用途 |
 |----------|---------|---------|
-| `EXPRESS_SERVER_URL` | `http://localhost:3000` | Canvas server URL for MCP sync |
-| `ENABLE_CANVAS_SYNC` | `true` | Enable/disable canvas sync |
-| `PORT` | `3000` | Canvas server port |
-| `HOST` | `localhost` | Canvas server host |
-| `LOG_FILE_PATH` | `excalidraw.log` | Log file path |
-| `DEBUG` | `false` | Debug logging |
+| `EXPRESS_SERVER_URL` | `http://localhost:3000` | MCP 同步的 Canvas 服务器 URL |
+| `ENABLE_CANVAS_SYNC` | `true` | 启用/禁用画布同步 |
+| `PORT` | `3000` | Canvas 服务器端口 |
+| `HOST` | `localhost` | Canvas 服务器主机 |
+| `LOG_FILE_PATH` | `excalidraw.log` | 日志文件路径 |
+| `DEBUG` | `false` | 调试日志 |
 
-## Development Workflow
+## 开发工作流
 
-### Making Changes to Backend
+### 修改后端代码
 
-1. Edit TypeScript files in `src/`
-2. Run `npm run build:server` or use watch mode: `npm run dev`
-3. Compiled output appears in `dist/`
-4. Test with `npm run canvas` or `npm start`
+1. 编辑 `src/` 中的 TypeScript 文件
+2. 运行 `npm run build:server` 或使用监视模式：`npm run dev`
+3. 编译输出出现在 `dist/`
+4. 使用 `npm run canvas` 或 `npm start` 测试
 
-### Making Changes to Frontend
+### 修改前端代码
 
-1. Edit React components in `frontend/src/`
-2. Run `npm run build:frontend` or use dev server: `npm run dev`
-3. Built output appears in `dist/frontend/`
-4. Canvas server serves from `dist/index.html` and `dist/frontend/`
+1. 编辑 `frontend/src/` 中的 React 组件
+2. 运行 `npm run build:frontend` 或使用开发服务器：`npm run dev`
+3. 构建输出出现在 `dist/frontend/`
+4. Canvas 服务器从 `dist/index.html` 和 `dist/frontend/` 提供服务
 
-### Testing Full Integration
+### 测试完整集成
 
-1. Build everything: `npm run build`
-2. Start canvas server: `npm run canvas`
-3. Open browser: `http://localhost:3000`
-4. Configure MCP server in Claude Desktop/Code/Cursor
-5. Ask AI to create diagrams
+1. 构建所有内容：`npm run build`
+2. 启动 canvas 服务器：`npm run canvas`
+3. 打开浏览器：`http://localhost:3000`
+4. 在 Claude Desktop/Code/Cursor 中配置 MCP 服务器
+5. 让 AI 创建图表
 
-## Critical Integration Points
+## 关键集成点
 
-### Canvas ↔ MCP Server Communication
+### Canvas ↔ MCP 服务器通信
 
-**MCP Server → Canvas Server**:
+**MCP 服务器 → Canvas 服务器**:
 ```typescript
-// HTTP POST to create element
+// HTTP POST 创建元素
 fetch('http://localhost:3000/api/elements', {
   method: 'POST',
   body: JSON.stringify(element)
 })
 ```
 
-**Canvas Server → Frontend**:
+**Canvas 服务器 → 前端**:
 ```typescript
-// WebSocket broadcast
+// WebSocket 广播
 wss.clients.forEach(client => {
   client.send(JSON.stringify({
     type: 'update',
@@ -244,21 +252,21 @@ wss.clients.forEach(client => {
 })
 ```
 
-### Docker Networking
+### Docker 网络
 
-**Important**: When running MCP server in Docker:
-- MUST use `--network host` flag (to access localhost:3000)
-- MUST use `-i` flag (for stdio protocol)
-- Canvas server can be local OR Docker (both work)
+**重要**: 在 Docker 中运行 MCP 服务器时：
+- 必须使用 `--network host` 标志（访问 localhost:3000）
+- 必须使用 `-i` 标志（stdio 协议）
+- Canvas 服务器可以是本地或 Docker（都可以）
 
-## IDE Configuration
+## IDE 配置
 
-The MCP server is configured in IDE config files:
-- **Claude Desktop**: `claude_desktop_config.json` (in macOS: `~/Library/Application Support/Claude/`)
-- **Claude Code**: `.mcp.json` (project root)
+MCP 服务器在 IDE 配置文件中配置：
+- **Claude Desktop**: `claude_desktop_config.json`（macOS 中：`~/Library/Application Support/Claude/`）
+- **Claude Code**: `.mcp.json`（项目根目录）
 - **Cursor**: `.cursor/mcp.json`
 
-**Local MCP Server Config**:
+**本地 MCP 服务器配置**:
 ```json
 {
   "command": "node",
@@ -270,7 +278,7 @@ The MCP server is configured in IDE config files:
 }
 ```
 
-**Docker MCP Server Config**:
+**Docker MCP 服务器配置**:
 ```json
 {
   "command": "docker",
@@ -283,50 +291,50 @@ The MCP server is configured in IDE config files:
 }
 ```
 
-## Common Issues
+## 常见问题
 
-### Build Issues
+### 构建问题
 
-**Problem**: Build fails with type errors
-- **Solution**: Run `npm run type-check` to identify issues
-- **Solution**: Check TypeScript version: `npx tsc --version` (should be 5.x)
-- **Solution**: Delete `dist/` and rebuild: `rm -rf dist && npm run build`
+**问题**: 构建因类型错误失败
+- **解决方案**: 运行 `npm run type-check` 识别问题
+- **解决方案**: 检查 TypeScript 版本：`npx tsc --version`（应为 5.x）
+- **解决方案**: 删除 `dist/` 并重建：`rm -rf dist && npm run build`
 
-**Problem**: Frontend not loading
-- **Solution**: Ensure `dist/index.html` exists after `npm run build:frontend`
-- **Solution**: Verify `dist/frontend/` directory has Vite output
-- **Solution**: Check console for 404 errors on asset paths
+**问题**: 前端无法加载
+- **解决方案**: 确保 `npm run build:frontend` 后存在 `dist/index.html`
+- **解决方案**: 验证 `dist/frontend/` 目录有 Vite 输出
+- **解决方案**: 检查控制台中资源路径的 404 错误
 
-### Runtime Issues
+### 运行时问题
 
-**Problem**: Elements not syncing to canvas
-- **Solution**: Verify canvas server is running on port 3000
-- **Solution**: Check `ENABLE_CANVAS_SYNC=true` in MCP config
-- **Solution**: Confirm `EXPRESS_SERVER_URL` points to correct URL
-- **Solution**: For Docker MCP, ensure `--network host` is used
+**问题**: 元素未同步到画布
+- **解决方案**: 验证 canvas 服务器运行在端口 3000
+- **解决方案**: 检查 MCP 配置中的 `ENABLE_CANVAS_SYNC=true`
+- **解决方案**: 确认 `EXPRESS_SERVER_URL` 指向正确的 URL
+- **解决方案**: 对于 Docker MCP，确保使用 `--network host`
 
-**Problem**: WebSocket connection failed
-- **Solution**: Check browser console (F12) for WebSocket errors
-- **Solution**: Verify no firewall blocking port 3000
-- **Solution**: Test health endpoint: `curl http://localhost:3000/health`
+**问题**: WebSocket 连接失败
+- **解决方案**: 检查浏览器控制台（F12）中的 WebSocket 错误
+- **解决方案**: 验证没有防火墙阻止端口 3000
+- **解决方案**: 测试健康端点：`curl http://localhost:3000/health`
 
-**Problem**: MCP tools not appearing in IDE
-- **Solution**: Restart IDE after config changes
-- **Solution**: Check MCP server logs in IDE's MCP panel
-- **Solution**: Verify `dist/index.js` exists and is executable
+**问题**: MCP 工具未出现在 IDE 中
+- **解决方案**: 配置更改后重启 IDE
+- **解决方案**: 检查 IDE 的 MCP 面板中的 MCP 服务器日志
+- **解决方案**: 验证 `dist/index.js` 存在且可执行
 
-## Testing
+## 测试
 
-### Manual Testing Canvas Server
+### 手动测试 Canvas 服务器
 
 ```bash
-# Start server
+# 启动服务器
 npm run canvas
 
-# Test health endpoint
+# 测试健康端点
 curl http://localhost:3000/health
 
-# Test create element
+# 测试创建元素
 curl -X POST http://localhost:3000/api/elements \
   -H "Content-Type: application/json" \
   -d '{
@@ -337,60 +345,60 @@ curl -X POST http://localhost:3000/api/elements \
     "height": 100
   }'
 
-# Test get elements
+# 测试获取元素
 curl http://localhost:3000/api/elements
 ```
 
-### Manual Testing MCP Server
+### 手动测试 MCP 服务器
 
-1. Configure in Claude Desktop/Code/Cursor
-2. Open IDE and check MCP connection status
-3. Ask Claude to create a diagram
-4. Verify elements appear on canvas at http://localhost:3000
+1. 在 Claude Desktop/Code/Cursor 中配置
+2. 打开 IDE 并检查 MCP 连接状态
+3. 让 Claude 创建图表
+4. 验证元素出现在 http://localhost:3000 的画布上
 
-## Project-Specific Skills
+## 项目特定技能
 
-This repository includes a CodeBuddy skill for Excalidraw diagram creation:
+此仓库包含用于 Excalidraw 图表创建的 CodeBuddy 技能：
 
-**Location**: `.codebuddy/skills/excalidraw-diagram/`
+**位置**: `.codebuddy/skills/excalidraw-diagram/`
 
-**Structure**:
+**结构**:
 ```
 .codebuddy/skills/excalidraw-diagram/
-├── SKILL.md                    # Main skill instructions
+├── SKILL.md                    # 主技能说明
 └── references/
-    └── schema.md              # Complete Excalidraw schema reference
+    └── schema.md              # 完整 Excalidraw schema 参考
 ```
 
-**When to load**: When users request diagram creation, architecture diagrams, flowcharts, mind maps, or any visual diagrams.
+**何时加载**: 当用户请求创建图表、架构图、流程图、思维导图或任何可视化图表时。
 
-**Key concepts**:
-- Element skeleton (ExcalidrawElementSkeleton)
-- Dual-direction bindings (container↔text, arrow↔element)
-- Batch element creation with preset IDs
-- Layout planning and color schemes
+**关键概念**:
+- 元素骨架（ExcalidrawElementSkeleton）
+- 双向绑定（容器↔文本，箭头↔元素）
+- 使用预设 ID 批量创建元素
+- 布局规划和配色方案
 
-## Dependencies
+## 依赖项
 
-### Production Dependencies
+### 生产依赖
 
-- `@excalidraw/excalidraw` - Official Excalidraw React component
-- `@modelcontextprotocol/sdk` - MCP protocol implementation
-- `express` - Web server
-- `ws` - WebSocket server
-- `winston` - Logging
-- `zod` - Schema validation
-- `react` + `react-dom` - Frontend framework
+- `@excalidraw/excalidraw` - 官方 Excalidraw React 组件
+- `@modelcontextprotocol/sdk` - MCP 协议实现
+- `express` - Web 服务器
+- `ws` - WebSocket 服务器
+- `winston` - 日志记录
+- `zod` - Schema 验证
+- `react` + `react-dom` - 前端框架
 
-### Development Dependencies
+### 开发依赖
 
-- `typescript` - TypeScript compiler (5.8+)
-- `vite` - Frontend build tool
-- `@vitejs/plugin-react` - React plugin for Vite
-- Various `@types/*` packages for TypeScript definitions
+- `typescript` - TypeScript 编译器（5.8+）
+- `vite` - 前端构建工具
+- `@vitejs/plugin-react` - Vite 的 React 插件
+- 各种 `@types/*` 包用于 TypeScript 定义
 
-## Node.js Requirements
+## Node.js 要求
 
-- **Minimum**: Node.js 18.x
-- **Recommended**: Node.js 20.x
-- **Module System**: ES modules only (not CommonJS)
+- **最低**: Node.js 18.x
+- **推荐**: Node.js 20.x
+- **模块系统**: 仅 ES 模块（非 CommonJS）
